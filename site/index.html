@@ -60,6 +60,21 @@ h2{margin:0;font-size:22px;font-weight:800}
 footer{font-size:13px;color:var(--muted);border-top:1px solid #DDD6FE;padding-top:14px;display:flex;flex-direction:column;gap:4px}
 .linkbtn{font:inherit;font-size:13px;background:none;border:0;color:#4338CA;cursor:pointer;padding:0;text-decoration:underline}
 @media (max-width:600px){h1{font-size:26px}.kpi .v{font-size:26px}.donut svg{width:220px;height:220px;flex-basis:220px}}
+.btn-sm{font:inherit;font-size:13px;font-weight:600;background:#EEF2FF;color:#312E81;border:0;border-radius:8px;padding:6px 10px;min-height:32px;cursor:pointer}
+.btn-sm:hover{background:#E0E7FF}
+.banner{background:#FFF7ED;border:2px solid #FDBA74;border-radius:20px;padding:18px 22px;display:flex;flex-direction:column;gap:10px}
+.banner ul{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:8px}
+.banner li{display:flex;flex-wrap:wrap;align-items:center;gap:10px;font-size:15px}
+dialog{border:0;border-radius:24px;padding:0;width:min(520px,94vw);color:var(--ink);font-family:inherit}
+dialog::backdrop{background:rgba(26,20,70,.45)}
+dialog form{padding:26px;display:flex;flex-direction:column;gap:12px}
+dialog label{font-weight:600;font-size:14px}
+dialog input[type=number],dialog input[type=date]{font:inherit;font-size:16px;padding:10px 12px;border:2px solid #DDD6FE;border-radius:10px;min-height:44px;width:100%}
+dialog .actions{display:flex;gap:10px;justify-content:flex-start;flex-wrap:wrap}
+dialog .primary{font:inherit;font-size:16px;font-weight:700;background:var(--hero);color:#fff;border:0;border-radius:12px;min-height:46px;padding:0 20px;cursor:pointer}
+dialog .ghost{font:inherit;font-size:16px;background:#F1EEFB;color:var(--ink);border:0;border-radius:12px;min-height:46px;padding:0 20px;cursor:pointer}
+#upPrev{max-width:100%;max-height:180px;border-radius:10px;display:block}
+.drop{border:2px dashed #C4B5FD;border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:8px;background:#FAF8FF}
 </style>
 </head>
 <body>
@@ -75,6 +90,26 @@ footer{font-size:13px;color:var(--muted);border-top:1px solid #DDD6FE;padding-to
   </form>
 </div>
 <main id="app" class="wrap" hidden></main>
+<dialog id="upd">
+  <form method="dialog" id="updForm">
+    <h2 id="updTitle" style="font-size:20px">עדכון יתרה</h2>
+    <p class="note" id="updSub"></p>
+    <div class="drop">
+      <label for="updFile">צרף צילום מסך מאתר הקופה</label>
+      <input id="updFile" type="file" accept="image/*">
+      <span class="small" id="updOcr">התמונה נקראת אצלך בדפדפן בלבד ולא נשמרת בשום מקום. המספר יזוהה וימולא אוטומטית.</span>
+      <img id="updPrev" alt="" hidden>
+    </div>
+    <label for="updBal" id="updBalLab">יתרה</label>
+    <input id="updBal" type="number" step="0.01" min="0" required>
+    <label for="updDate">נכון לתאריך</label>
+    <input id="updDate" type="date" required>
+    <label for="updUnits">מספר יחידות (לא חובה)</label>
+    <input id="updUnits" type="number" step="0.001" min="0">
+    <p class="note">בלחיצה על "שמור" ייפתח GitHub עם קובץ מוצפן מוכן. לוחצים שם <b>Commit changes</b> – והאתר מתעדכן תוך כ־2 דקות.</p>
+    <div class="actions"><button class="primary" id="updGo" value="go">שמור</button><button class="ghost" value="cancel" formnovalidate>ביטול</button></div>
+  </form>
+</dialog>
 
 <script>
 const $ = (s) => document.querySelector(s);
@@ -85,7 +120,7 @@ const STORE = 'pension-dashboard-key';
 
 async function deriveKey(pw, enc) {
   const base = await crypto.subtle.importKey('raw', new TextEncoder().encode(pw), 'PBKDF2', false, ['deriveKey']);
-  return crypto.subtle.deriveKey({ name: 'PBKDF2', salt: ub64(enc.salt), iterations: enc.iterations, hash: 'SHA-256' }, base, { name: 'AES-GCM', length: 256 }, true, ['decrypt']);
+  return crypto.subtle.deriveKey({ name: 'PBKDF2', salt: ub64(enc.salt), iterations: enc.iterations, hash: 'SHA-256' }, base, { name: 'AES-GCM', length: 256 }, true, ['decrypt', 'encrypt']);
 }
 async function decrypt(key, enc) {
   const pt = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: ub64(enc.iv) }, key, ub64(enc.ct));
@@ -96,15 +131,15 @@ async function loadEnc() {
   return r.json();
 }
 
-let ENC = null;
+let ENC = null, KEY = null, DATA = null;
 (async () => {
   try { ENC = await loadEnc(); } catch { $('#err').textContent = 'לא הצלחתי לטעון את הנתונים.'; return; }
   if (ENC.empty) { $('#err').textContent = 'האתר מוכן – ממתין לנתונים הראשונים.'; return; }
   try {
     const saved = JSON.parse(localStorage.getItem(STORE) || 'null');
     if (saved && saved.salt === ENC.salt) {
-      const key = await crypto.subtle.importKey('raw', ub64(saved.k), 'AES-GCM', false, ['decrypt']);
-      show(await decrypt(key, ENC));
+      const key = await crypto.subtle.importKey('raw', ub64(saved.k), 'AES-GCM', false, ['decrypt', 'encrypt']);
+      KEY = key; show(await decrypt(key, ENC));
     }
   } catch { try { localStorage.removeItem(STORE); } catch {} }
 })();
@@ -119,7 +154,7 @@ $('#lf').addEventListener('submit', async (e) => {
     if ($('#rem').checked) {
       try { localStorage.setItem(STORE, JSON.stringify({ salt: ENC.salt, k: b64(await crypto.subtle.exportKey('raw', key)) })); } catch {}
     }
-    show(data);
+    KEY = key; show(data);
   } catch {
     $('#err').textContent = 'סיסמה שגויה.';
   } finally { $('#go').disabled = false; }
@@ -135,6 +170,72 @@ const bg = (n) => n == null ? '#F1EEFB' : n >= 0 ? '#D1FAE5' : '#FEE2E2';
 const m2 = (n) => '₪' + Number(n).toLocaleString('en-US', { maximumFractionDigits: 2 });
 const dt = (s) => { const [y, m, d] = s.split('-'); return `${d}.${m}.${y}`; };
 const mon = (s) => { const [y, m] = s.split('-'); return `${m}/${y}`; };
+
+const daysSince = (s) => Math.floor((Date.now() - new Date(s + 'T12:00:00Z')) / 86400000);
+const agoTxt = (s) => { const d = daysSince(s); return d <= 0 ? 'היום' : d === 1 ? 'אתמול' : d < 60 ? `לפני ${d} ימים` : `לפני ${Math.round(d / 30)} חודשים`; };
+const isStale = (f) => !f.reported ? true : daysSince(f.reported.date) > (f.cur === 'ILS' ? 120 : 90);
+const REPO = (() => { const o = location.hostname.split('.')[0], r = location.pathname.split('/').filter(Boolean)[0]; return location.hostname.endsWith('github.io') && r ? `${o}/${r}` : 'benhurshahar-rgb/pension-dashboard'; })();
+
+// ---------- balance update (encrypted with the page key, committed via GitHub's web editor) ----------
+let UPD = null;
+function openUpdate(id) {
+  const f = DATA.people.flatMap((p) => p.funds.map((x) => ({ ...x, person: p.name }))).find((x) => x.id === id);
+  if (!f) return;
+  UPD = f;
+  const sym = { ILS: '₪', USD: '$', EUR: '€' }[f.cur];
+  $('#updTitle').textContent = `עדכון יתרה – ${f.person} · ${f.kind} ${f.provider}`;
+  $('#updSub').textContent = f.reported ? `יתרה אחרונה: ${nat(f.reported.amount, f.reported.cur)} נכון ל־${dt(f.reported.date)}` : 'אין עדיין יתרה מדווחת לקופה הזו.';
+  $('#updBalLab').textContent = `יתרה (${sym})`;
+  $('#updBal').value = ''; $('#updUnits').value = '';
+  $('#updDate').value = new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Jerusalem' });
+  $('#updFile').value = ''; $('#updPrev').hidden = true;
+  $('#updOcr').textContent = 'התמונה נקראת אצלך בדפדפן בלבד ולא נשמרת בשום מקום. המספר יזוהה וימולא אוטומטית.';
+  $('#upd').showModal();
+}
+function loadTesseract() {
+  return window.Tesseract ? Promise.resolve(window.Tesseract) : new Promise((res, rej) => {
+    const sc = document.createElement('script');
+    sc.src = 'https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';
+    sc.onload = () => res(window.Tesseract); sc.onerror = rej; document.head.appendChild(sc);
+  });
+}
+function pickAmount(text, cur) {
+  const sym = { ILS: '₪', USD: '\\$', EUR: '€' }[cur];
+  const re = new RegExp(`(?:${sym})\\s?(\\d{1,3}(?:,\\d{3})+(?:\\.\\d{1,2})?)`, 'g');
+  const counts = new Map();
+  for (const m of text.matchAll(re)) { const v = parseFloat(m[1].replace(/,/g, '')); counts.set(v, (counts.get(v) || 0) + 1); }
+  if (!counts.size) for (const m of text.matchAll(/(\d{1,3}(?:,\d{3})+\.\d{2})/g)) { const v = parseFloat(m[1].replace(/,/g, '')); counts.set(v, (counts.get(v) || 0) + 1); }
+  return [...counts.entries()].sort((a, b) => b[1] - a[1] || b[0] - a[0])[0]?.[0] ?? null;
+}
+$('#updFile').addEventListener('change', async (e) => {
+  const file = e.target.files[0]; if (!file) return;
+  const url = URL.createObjectURL(file);
+  $('#updPrev').src = url; $('#updPrev').hidden = false;
+  $('#updOcr').textContent = 'קורא את המספרים מהתמונה…';
+  try {
+    const T = await loadTesseract();
+    const { data } = await T.recognize(file, 'eng');
+    const v = pickAmount(data.text, UPD.cur);
+    const units = (data.text.match(/UNIT[^\d]{0,40}([\d,]+\.\d+)/i) || [])[1];
+    if (units) $('#updUnits').value = units.replace(/,/g, '');
+    if (v) { $('#updBal').value = v; $('#updOcr').textContent = `זוהה: ${nat(v, UPD.cur)} – בדוק שזה המספר הנכון.`; }
+    else $('#updOcr').textContent = 'לא זיהיתי סכום – הקלד אותו ידנית מהתמונה.';
+  } catch { $('#updOcr').textContent = 'לא הצלחתי לקרוא את התמונה – הקלד את הסכום ידנית.'; }
+});
+$('#updForm').addEventListener('submit', async (e) => {
+  if (e.submitter && e.submitter.value === 'cancel') return;
+  e.preventDefault();
+  const bal = parseFloat($('#updBal').value), date = $('#updDate').value;
+  if (!(bal > 0) || !date || !KEY) return;
+  const upd = { fundId: UPD.id, balance: bal, balanceDate: date, at: new Date().toISOString() };
+  const units = parseFloat($('#updUnits').value); if (units > 0) upd.units = units;
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const ct = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, KEY, new TextEncoder().encode(JSON.stringify(upd)));
+  const body = JSON.stringify({ v: 1, iv: b64(iv), ct: b64(ct) });
+  const name = date.replace(/-/g, '') + '-' + Array.from(crypto.getRandomValues(new Uint8Array(4)), (x) => x.toString(16).padStart(2, '0')).join('') + '.json';
+  window.open(`https://github.com/${REPO}/new/main/data/updates?filename=${encodeURIComponent(name)}&value=${encodeURIComponent(body)}`, '_blank', 'noopener');
+  $('#upd').close();
+});
 
 const PAL = {
   s: ['#6366F1', '#14B8A6', '#3B82F6', '#8B5CF6', '#06B6D4', '#0EA5E9', '#22C55E', '#A855F7', '#64748B', '#2563EB'],
@@ -216,6 +317,17 @@ function show(D) {
     <span class="sub" style="font-size:13px">קצבה צפויה = סכום הקצבאות מכל הקופות בגיל הפרישה אם ממשיכים להפקיד כמו היום, כולל קצבת זקנה מביטוח לאומי.</span>
   </section>`;
 
+  // reminder banner: foreign funds one by one (screenshot), Israeli funds as one line (Mislaka report)
+  const stale = D.people.flatMap((p) => p.funds.filter(isStale).map((f) => ({ p, f })));
+  const staleAbroad = stale.filter((x) => x.f.cur !== 'ILS'), staleIl = stale.filter((x) => x.f.cur === 'ILS');
+  if (stale.length) {
+    const oldestIl = staleIl.filter((x) => x.f.reported).map((x) => x.f.reported.date).sort()[0];
+    html += `<section class="banner" aria-label="תזכורת לעדכון"><h2 style="font-size:19px">הגיע הזמן לעדכן</h2>
+      <ul>${staleAbroad.map(({ p, f }) => `<li><b>${esc(p.name)} · ${esc(f.kind)}</b><span class="small">${f.reported ? 'עודכן ' + dt(f.reported.date) + ' (' + agoTxt(f.reported.date) + ')' : 'אין נתון בכלל'}</span>${f.url ? `<a href="${esc(f.url)}" target="_blank" rel="noopener" style="font-size:14px">1. צלם מסך באתר ↗</a>` : ''}<button type="button" class="btn-sm" data-upd="${esc(f.id)}">2. צרף כאן</button></li>`).join('')}
+      ${staleIl.length ? `<li><b>${staleIl.length} קופות בישראל</b><span class="small">${oldestIl ? 'הנתון הישן ביותר מ־' + dt(oldestIl) + ' (' + agoTxt(oldestIl) + ')' : ''} · מתעדכנות מדוח המסלקה – העלה את הדוח לשיחה עם Claude</span></li>` : ''}</ul>
+      <p class="note">תזכורת קופצת כשנתון ישן מ־3 חודשים (חו״ל) או 4 חודשים (ישראל). ליד כל קופה בטבלה יש גם כפתור "עדכן יתרה".</p></section>`;
+  }
+
   // donuts
   const personItems = (p) => p.funds.filter((f) => f.value).sort((a, b) => b.value - a.value).map((f) => ({
     label: `${f.kind} · ${f.provider}`, v: f.value, y: f.yPct, color: f.color, side: pct(f.yPct, 1), sideColor: col(f.yPct),
@@ -266,7 +378,7 @@ function show(D) {
         <div class="tr">
           <div class="cell"><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><span class="sq" style="background:${f.color}"></span><span style="font-weight:700">${esc(f.kind)}</span>${f.inactive ? '<span class="tag" style="background:#F1EEFB;color:#4C4677">לא פעיל</span>' : ''}</div>
             <span class="small">${f.url ? `<a href="${esc(f.url)}" target="_blank" rel="noopener">${esc(f.provider)} ↗</a>` : esc(f.provider)} · ${esc(f.track)}</span></div>
-          <div class="cell"><span style="font-weight:700">${f.value == null ? 'אין נתון' : ils(f.value)}</span><span class="small">${f.reported ? `מדווח ${nat(f.reported.amount, f.reported.cur)} ב־${mon(f.reported.date)}` : ''}</span></div>
+          <div class="cell"><span style="font-weight:700">${f.value == null ? 'אין נתון' : ils(f.value)}</span>${f.reported ? `<span class="small">${nat(f.reported.amount, f.reported.cur)} · עודכן ${dt(f.reported.date)} (${agoTxt(f.reported.date)})</span>` : ''}${isStale(f) ? '<span class="tag" style="background:#FFEDD5;color:#9A3412">הגיע הזמן לעדכן</span>' : ''}<button type="button" class="btn-sm" data-upd="${esc(f.id)}">עדכן יתרה</button></div>
           <div class="cell"><span class="pill" style="color:${col(f.mPct)};background:${bg(f.mPct)}">${pct(f.mPct)}</span><span class="small" style="color:${col(f.mPct)};font-weight:600">${sIls(f.mAmt)}</span></div>
           <div class="cell"><span class="pill" style="color:${col(f.yPct)};background:${bg(f.yPct)}">${pct(f.yPct)}</span><span class="small" style="color:${col(f.yPct)};font-weight:600">${sIls(f.yAmt)}</span></div>
           <div class="cell"><span>${esc(f.depositFee)} · ${f.accFee == null ? '?' : f.accFee.toFixed(2) + '%'}</span>${f.note ? `<span class="tag" style="background:#FFEDD5;color:#9A3412">${esc(f.note)}</span>` : ''}</div>
@@ -308,6 +420,8 @@ function show(D) {
   </footer>`;
 
   app.innerHTML = html;
+  DATA = D;
+  app.querySelectorAll('[data-upd]').forEach((b) => b.addEventListener('click', () => openUpdate(b.dataset.upd)));
 
   for (const p of D.people) {
     wireDonut('d-' + p.id, personItems(p), {
