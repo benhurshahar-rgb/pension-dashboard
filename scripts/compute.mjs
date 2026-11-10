@@ -85,7 +85,10 @@ export function computePayload(state, market, today) {
     const funds = p.funds.map((f) => {
       const now = model.ils(f, today);
       const mAgo = model.ils(f, monthAgo);
-      const y0 = model.ils(f, yearStart);
+      // YTD: if the report gave this year's return, start from it and estimate only the time since the report.
+      const y0 = f.ytdReported != null && f.balanceDate && f.balanceDate.slice(0, 4) === today.slice(0, 4)
+        ? model.ils(f, f.balanceDate) / (1 + f.ytdReported / 100)
+        : model.ils(f, yearStart);
       const pfx = f.pensionCur ? model.fx(f.pensionCur, today) : 1;
       const pension = f.pensionWith != null ? f.pensionWith * pfx : null;
       const pensionWo = f.pensionWithout != null ? f.pensionWithout * pfx : null;
