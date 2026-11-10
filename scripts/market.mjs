@@ -6,7 +6,8 @@ const SYMBOLS = {
   TA125: '^TA125.TA',  // Tel Aviv 125 (ILS)
   URTH: 'URTH',        // MSCI World ETF (USD)
   EURLONG: 'IBGL.AS',  // iShares Euro Govt Bond 15-30yr (proxy for Irish Life Annuity Objective)
-  VTIVX: 'VTIVX',      // Vanguard Target Retirement 2045 (proxy for the 401k trust)
+  VTIVX: 'VTIVX',
+  VFIFX: 'VFIFX',      // Vanguard Target Retirement 2050 (proxy for Lotem's Meta 401k trust)      // Vanguard Target Retirement 2045 (proxy for the 401k trust)
   USDILS: 'ILS=X',     // USD → ILS
   EURILS: 'EURILS=X',  // EUR → ILS
 };

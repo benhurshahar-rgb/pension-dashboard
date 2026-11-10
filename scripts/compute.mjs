@@ -16,6 +16,7 @@ export const TRACKS = {
   general: { label: 'מסלול כללי', w: { spx_ils: 0.35, ta125: 0.15, bonds: 0.5 } },
   world_eur: { label: 'מניות עולמי (ביורו)', w: { world_eur: 1 } },
   vtr2045: { label: 'Vanguard Target 2045 (81% מניות)', w: { vtivx: 1 } },
+  vtr2050: { label: 'Vanguard Target 2050 (88% מניות)', w: { vfifx: 1 } },
   irish_hg: { label: 'EMPOWER High Growth', w: { world_eur: 0.75, bonds: 0.25 } },
   irish_annuity: { label: 'EMPOWER Annuity Objective (אג״ח ארוכות)', w: { eur_long: 1 } },
 };
@@ -42,6 +43,7 @@ export function makeModel(market, fallbackFx) {
     switch (k) {
       case 'spx_usd': return at(S.GSPC, d);
       case 'eur_long': return at(S.EURLONG, d);
+      case 'vfifx': return at(S.VFIFX, d) ?? at(S.GSPC, d);
       case 'vtivx': return at(S.VTIVX, d) ?? at(S.GSPC, d);
       case 'spx_ils': { const a = at(S.GSPC, d), b = at(S.USDILS, d); return a && b ? a * b : null; }
       case 'ta125': return at(S.TA125, d);
