@@ -5,6 +5,7 @@ const SYMBOLS = {
   GSPC: '^GSPC',       // S&P 500 (USD)
   TA125: '^TA125.TA',  // Tel Aviv 125 (ILS)
   URTH: 'URTH',        // MSCI World ETF (USD)
+  VTIVX: 'VTIVX',      // Vanguard Target Retirement 2045 (proxy for the 401k trust)
   USDILS: 'ILS=X',     // USD → ILS
   EURILS: 'EURILS=X',  // EUR → ILS
 };

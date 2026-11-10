@@ -15,6 +15,8 @@ export const TRACKS = {
   equity_il: { label: 'מסלול מניות', w: { spx_ils: 0.6, ta125: 0.4 } },
   general: { label: 'מסלול כללי', w: { spx_ils: 0.35, ta125: 0.15, bonds: 0.5 } },
   world_eur: { label: 'מניות עולמי (ביורו)', w: { world_eur: 1 } },
+  vtr2045: { label: 'Vanguard Target 2045 (81% מניות)', w: { vtivx: 1 } },
+  irish_hg: { label: 'EMPOWER High Growth', w: { world_eur: 0.75, bonds: 0.25 } },
 };
 
 function at(series, date) {
@@ -38,6 +40,7 @@ export function makeModel(market, fallbackFx) {
   const comp = (k, d) => {
     switch (k) {
       case 'spx_usd': return at(S.GSPC, d);
+      case 'vtivx': return at(S.VTIVX, d) ?? at(S.GSPC, d);
       case 'spx_ils': { const a = at(S.GSPC, d), b = at(S.USDILS, d); return a && b ? a * b : null; }
       case 'ta125': return at(S.TA125, d);
       case 'world_eur': { const a = at(S.URTH, d), u = at(S.USDILS, d), e = at(S.EURILS, d); return a && u && e ? a * u / e : null; }
@@ -83,9 +86,11 @@ export function computePayload(state, market, today) {
       const now = model.ils(f, today);
       const mAgo = model.ils(f, monthAgo);
       const y0 = model.ils(f, yearStart);
-      const pension = f.pensionWith != null ? f.pensionWith : (f.pensionWithUsd != null ? f.pensionWithUsd * model.fx('USD', today) : null);
+      const pfx = f.pensionCur ? model.fx(f.pensionCur, today) : 1;
+      const pension = f.pensionWith != null ? f.pensionWith * pfx : null;
+      const pensionWo = f.pensionWithout != null ? f.pensionWithout * pfx : null;
       if (pension) pW += pension;
-      if (f.pensionWithout) pWo += f.pensionWithout;
+      if (pensionWo) pWo += pensionWo;
       if (now != null) { total += now; ytd += now - y0; mm += now - mAgo; }
       const fee = f.accFee != null && now != null ? now * f.accFee / 100 : null;
       if (fee) feeRows.push({ label: `${p.name} · ${f.kind} ${f.provider} (${f.accFee.toFixed(2)}%)`, v: fee, person: p.id });
@@ -97,6 +102,7 @@ export function computePayload(state, market, today) {
         value: now, mPct: pct(now, mAgo), mAmt: now != null ? now - mAgo : null,
         yPct: pct(now, y0), yAmt: now != null ? now - y0 : null,
         depositFee: f.depositFee ?? '?', accFee: f.accFee, feeYear: fee, pension,
+        pensionNative: f.pensionCur && f.pensionWith != null ? { amount: f.pensionWith, cur: f.pensionCur } : null,
         liquidity: f.liquidity || '—',
         liquidityNote: mu == null ? null : mu <= 0 ? 'נזילה עכשיו' : mu <= 12 ? `נזילה בעוד ${mu} חודשים` : null,
         note: f.note || null,

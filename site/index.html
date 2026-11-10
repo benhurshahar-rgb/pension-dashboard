@@ -271,7 +271,7 @@ function show(D) {
           <div class="cell"><span class="pill" style="color:${col(f.yPct)};background:${bg(f.yPct)}">${pct(f.yPct)}</span><span class="small" style="color:${col(f.yPct)};font-weight:600">${sIls(f.yAmt)}</span></div>
           <div class="cell"><span>${esc(f.depositFee)} · ${f.accFee == null ? '?' : f.accFee.toFixed(2) + '%'}</span>${f.note ? `<span class="tag" style="background:#FFEDD5;color:#9A3412">${esc(f.note)}</span>` : ''}</div>
           <span>${ils(f.feeYear)}</span>
-          <span>${ils(f.pension)}</span>
+          <div class="cell"><span>${ils(f.pension)}</span>${f.pensionNative ? `<span class="small">${nat(f.pensionNative.amount, f.pensionNative.cur)} לחודש</span>` : ''}</div>
           <div class="cell"><span style="font-weight:600">${esc(f.liquidity)}</span>${f.liquidityNote ? `<span class="tag" style="background:#D1FAE5;color:#065F46">${esc(f.liquidityNote)}</span>` : ''}</div>
         </div>`).join('')}
       </div></div>
@@ -303,7 +303,7 @@ function show(D) {
     <div style="display:flex;flex-wrap:wrap;gap:10px;font-size:14px"><span style="font-weight:600;color:#4C4677">אתרי החברות:</span>${companies.map(([c, u]) => `<a href="${esc(u)}" target="_blank" rel="noopener">${esc(c)} ↗</a>`).join('')}</div>
   </section>
   <footer>
-    <span>יתרות: הדוח האחרון מכל קופה (מסלקה פנסיונית / דוחות הקופות). שווי יומי: הערכה לפי מדדי השוק (S&P 500, ת״א 125, MSCI World) ושערי בנק ישראל.</span>
+    <span>יתרות: הדוח האחרון מכל קופה (מסלקה פנסיונית / דוחות הקופות). שווי יומי: הערכה לפי מדדי השוק (S&P 500, ת״א 125, MSCI World, Vanguard 2045) ושערי בנק ישראל.</span>
     <span>מתעדכן אוטומטית כל בוקר. <button class="linkbtn" id="logout" type="button">יציאה ושכחת הסיסמה במכשיר</button></span>
   </footer>`;
 
