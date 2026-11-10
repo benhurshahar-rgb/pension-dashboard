@@ -173,6 +173,9 @@ const mon = (s) => { const [y, m] = s.split('-'); return `${m}/${y}`; };
 
 const HEB_M = ['ינואר', 'פברואר', 'מרץ', 'אפריל', 'מאי', 'יוני', 'יולי', 'אוגוסט', 'ספטמבר', 'אוקטובר', 'נובמבר', 'דצמבר'];
 const monY = (s) => { const [y, m] = s.split('-'); return `${HEB_M[+m - 1]} ${y}`; };
+const pensionKpi = (P, bgc, fg) => P.depositsPaused
+  ? `<div class="kpi" style="background:${bgc};color:${fg}"><span class="l">קצבה צפויה – ${esc(P.name)} (בלי הפקדות כרגע)</span><span class="v">${ils(P.pensionWithout)}<span style="font-size:15px;font-weight:600"> / חודש</span></span><span class="s">אם ${P.resumeNote ? esc(P.resumeNote) + ' ו' : ''}ההפקדות יחזרו כמו קודם: ${ils(P.pensionWith)}</span></div>`
+  : `<div class="kpi" style="background:${bgc};color:${fg}"><span class="l">קצבה צפויה – ${esc(P.name)}</span><span class="v">${ils(P.pensionWith)}<span style="font-size:15px;font-weight:600"> / חודש</span></span><span class="s">ללא המשך הפקדות: ${ils(P.pensionWithout)}</span></div>`;
 const daysSince = (s) => Math.floor((Date.now() - new Date(s + 'T12:00:00Z')) / 86400000);
 const agoTxt = (s) => { const d = daysSince(s); return d <= 0 ? 'היום' : d === 1 ? 'אתמול' : d < 60 ? `לפני ${d} ימים` : `לפני ${Math.round(d / 30)} חודשים`; };
 const isStale = (f) => !f.reported ? true : daysSince(f.reported.date) > (f.cur === 'ILS' ? 120 : 90);
@@ -313,10 +316,10 @@ function show(D) {
     <div class="kpis">
       <div class="kpi" style="background:#fff;color:#1A1446"><span class="l" style="color:#4C4677">סה״כ צבירה משפחתית</span><span class="v">${ils(D.family.total)}</span><span class="s" style="color:${col(D.family.m)}">${pct(D.family.mPct)} ב־30 הימים האחרונים (${sIls(D.family.m)})</span></div>
       <div class="kpi" style="background:${D.family.ytd >= 0 ? '#A7F3D0' : '#FECACA'};color:${D.family.ytd >= 0 ? '#053B2A' : '#5B0B0B'}"><span class="l">${D.family.ytd >= 0 ? 'רווח' : 'הפסד'} מתחילת ${D.today.slice(0, 4)}</span><span class="v">${sIls(D.family.ytd)}</span><span class="s">${pct(D.family.ytdPct)} מינואר עד היום</span></div>
-      <div class="kpi" style="background:#BAE6FD;color:#0B2E4A"><span class="l">קצבה צפויה – ${esc(S.name)}</span><span class="v">${ils(S.pensionWith)}<span style="font-size:15px;font-weight:600"> / חודש</span></span><span class="s">ללא המשך הפקדות: ${ils(S.pensionWithout)}</span></div>
-      <div class="kpi" style="background:#FBCFE8;color:#4A0B2E"><span class="l">קצבה צפויה – ${esc(L.name)}</span><span class="v">${ils(L.pensionWith)}<span style="font-size:15px;font-weight:600"> / חודש</span></span><span class="s">ללא המשך הפקדות: ${ils(L.pensionWithout)}</span></div>
+      ${pensionKpi(S, '#BAE6FD', '#0B2E4A')}
+      ${pensionKpi(L, '#FBCFE8', '#4A0B2E')}
     </div>
-    <span class="sub" style="font-size:13px">קצבה צפויה = סכום הקצבאות מכל הקופות בגיל הפרישה אם ממשיכים להפקיד כמו היום, כולל קצבת זקנה מביטוח לאומי.</span>
+    <span class="sub" style="font-size:13px">קצבה צפויה = סכום הקצבאות מכל הקופות בגיל הפרישה (לפי דוחות הקופות), כולל קצבת זקנה מביטוח לאומי.</span>
   </section>`;
 
   // reminder banner: foreign funds one by one (screenshot), Israeli funds as one line (Mislaka report)

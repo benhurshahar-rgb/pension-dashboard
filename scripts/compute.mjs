@@ -112,7 +112,7 @@ export function computePayload(state, market, today) {
       };
     });
     fam.total += total; fam.ytd += ytd; fam.m += mm;
-    return { id: p.id, name: p.name, total, ytd, m: mm, pensionWith: pW, pensionWithout: pWo, funds, footnote: p.footnote || '' };
+    return { id: p.id, name: p.name, total, ytd, m: mm, pensionWith: pW, pensionWithout: pWo, funds, footnote: p.footnote || '', depositsPaused: !!p.depositsPaused, resumeNote: p.resumeNote || '' };
   });
 
   // growth: month-ends for the last 11 months + today
