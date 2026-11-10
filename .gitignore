@@ -1,0 +1,4 @@
+_site/
+node_modules/
+*.plain.json
+seed*.json

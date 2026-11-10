@@ -1,0 +1,326 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>החיסכון הפנסיוני של שחר ולוטם</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#1A1446;--muted:#4C4677;--bg:#F3F0FF;--hero:#241A5C;--line:#F1EEFB;--green:#047857;--red:#B91C1C}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:'Rubik',system-ui,sans-serif}
+a{color:#4338CA}a:hover{color:#312E81}
+.wrap{max-width:1240px;margin:0 auto;padding:28px 20px 72px;display:flex;flex-direction:column;gap:28px}
+.card{background:#fff;border-radius:24px;padding:24px;display:flex;flex-direction:column;gap:14px}
+h1{margin:0;font-size:34px;font-weight:800}
+h2{margin:0;font-size:22px;font-weight:800}
+.hero{background:var(--hero);color:#fff;border-radius:28px;padding:28px;display:flex;flex-direction:column;gap:22px}
+.hero .sub{font-size:15px;color:#D4CCFF}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px}
+.kpi{border-radius:20px;padding:20px;display:flex;flex-direction:column;gap:6px}
+.kpi .l{font-size:14px;font-weight:600}.kpi .v{font-size:32px;font-weight:800}.kpi .s{font-size:13px;font-weight:600}
+.row{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px}
+.dot{width:14px;height:14px;border-radius:50%;display:inline-block;flex:0 0 14px}
+.sq{width:12px;height:12px;border-radius:4px;display:inline-block;flex:0 0 12px}
+.donuts{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(460px,100%),1fr));gap:20px}
+.donut{display:flex;flex-wrap:wrap;gap:24px;align-items:center}
+.donut svg{width:250px;height:250px;flex:0 0 250px}
+.legend{flex:1 1 220px;max-width:560px;min-width:0;display:flex;flex-direction:column;gap:4px}
+.legend button{display:flex;align-items:center;gap:8px;font:inherit;font-size:14px;color:var(--ink);border:0;border-radius:10px;padding:8px 10px;min-height:44px;text-align:right;cursor:pointer;background:transparent}
+.legend button.on{background:var(--line)}
+.legend .lab{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:2px}
+.legend .det{font-size:13px;color:var(--muted)}
+.note{font-size:13px;color:var(--muted);margin:0}
+.chip{font-weight:700;font-size:14px;padding:6px 12px;border-radius:999px}
+.tablebox{overflow-x:auto;background:#fff;border-radius:20px}
+.t{min-width:1080px}
+.tr{display:grid;grid-template-columns:2.2fr 1.2fr 1.1fr 1.1fr 1.3fr 1fr 1.1fr 1.3fr;gap:12px;padding:14px 20px;border-bottom:1px solid var(--line);align-items:center;font-size:15px}
+.th{font-size:13px;font-weight:700}
+.cell{display:flex;flex-direction:column;gap:3px;min-width:0;align-items:flex-start}
+.small{font-size:12px;color:var(--muted)}
+.pill{font-weight:700;font-size:14px;padding:2px 8px;border-radius:6px}
+.tag{font-size:12px;font-weight:600;padding:2px 8px;border-radius:6px}
+.bars{display:flex;flex-direction:column;gap:10px}
+.bar{display:grid;grid-template-columns:minmax(150px,300px) 1fr 90px;gap:12px;align-items:center;font-size:14px}
+.bar .track{height:22px;background:#F7F5FE;border-radius:6px;overflow:hidden}
+.bar .fill{height:22px;border-radius:6px}
+.sep{display:flex;align-items:center;gap:16px;margin-top:12px}
+.sep div{flex:1 1 auto;height:3px;border-radius:2px;background:var(--hero)}
+.sep span{font-size:15px;font-weight:800;color:var(--hero);letter-spacing:1px}
+.months{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));font-size:12px;color:var(--muted);text-align:center}
+#login{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+#login form{background:#fff;border-radius:24px;padding:32px;width:min(420px,100%);display:flex;flex-direction:column;gap:14px}
+#login input[type=password]{font:inherit;font-size:17px;padding:12px 14px;border:2px solid #DDD6FE;border-radius:12px;min-height:48px}
+#login button{font:inherit;font-size:17px;font-weight:700;background:var(--hero);color:#fff;border:0;border-radius:12px;min-height:48px;cursor:pointer}
+#login label.ck{display:flex;gap:8px;align-items:center;font-size:14px;color:var(--muted)}
+#err{color:var(--red);font-weight:600;font-size:14px;min-height:20px;margin:0}
+footer{font-size:13px;color:var(--muted);border-top:1px solid #DDD6FE;padding-top:14px;display:flex;flex-direction:column;gap:4px}
+.linkbtn{font:inherit;font-size:13px;background:none;border:0;color:#4338CA;cursor:pointer;padding:0;text-decoration:underline}
+@media (max-width:600px){h1{font-size:26px}.kpi .v{font-size:26px}.donut svg{width:220px;height:220px;flex-basis:220px}}
+</style>
+</head>
+<body>
+<div id="login">
+  <form id="lf">
+    <h1 style="font-size:26px">הדשבורד המשפחתי</h1>
+    <p class="note">הנתונים מוצפנים. הכנס סיסמה כדי לפתוח.</p>
+    <label for="pw" style="font-weight:600">סיסמה</label>
+    <input id="pw" type="password" autocomplete="current-password" required>
+    <label class="ck"><input id="rem" type="checkbox" checked> לזכור במכשיר הזה</label>
+    <button type="submit" id="go">פתח</button>
+    <p id="err" role="alert"></p>
+  </form>
+</div>
+<main id="app" class="wrap" hidden></main>
+
+<script>
+const $ = (s) => document.querySelector(s);
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const ub64 = (s) => Uint8Array.from(atob(s), (c) => c.charCodeAt(0));
+const b64 = (u) => btoa(String.fromCharCode(...new Uint8Array(u)));
+const STORE = 'pension-dashboard-key';
+
+async function deriveKey(pw, enc) {
+  const base = await crypto.subtle.importKey('raw', new TextEncoder().encode(pw), 'PBKDF2', false, ['deriveKey']);
+  return crypto.subtle.deriveKey({ name: 'PBKDF2', salt: ub64(enc.salt), iterations: enc.iterations, hash: 'SHA-256' }, base, { name: 'AES-GCM', length: 256 }, true, ['decrypt']);
+}
+async function decrypt(key, enc) {
+  const pt = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: ub64(enc.iv) }, key, ub64(enc.ct));
+  return JSON.parse(new TextDecoder().decode(pt));
+}
+async function loadEnc() {
+  const r = await fetch('data.enc.json?t=' + Date.now(), { cache: 'no-store' });
+  return r.json();
+}
+
+let ENC = null;
+(async () => {
+  try { ENC = await loadEnc(); } catch { $('#err').textContent = 'לא הצלחתי לטעון את הנתונים.'; return; }
+  if (ENC.empty) { $('#err').textContent = 'האתר מוכן – ממתין לנתונים הראשונים.'; return; }
+  try {
+    const saved = JSON.parse(localStorage.getItem(STORE) || 'null');
+    if (saved && saved.salt === ENC.salt) {
+      const key = await crypto.subtle.importKey('raw', ub64(saved.k), 'AES-GCM', false, ['decrypt']);
+      show(await decrypt(key, ENC));
+    }
+  } catch { try { localStorage.removeItem(STORE); } catch {} }
+})();
+
+$('#lf').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  if (!ENC || ENC.empty) return;
+  $('#go').disabled = true; $('#err').textContent = 'פותח…';
+  try {
+    const key = await deriveKey($('#pw').value, ENC);
+    const data = await decrypt(key, ENC);
+    if ($('#rem').checked) {
+      try { localStorage.setItem(STORE, JSON.stringify({ salt: ENC.salt, k: b64(await crypto.subtle.exportKey('raw', key)) })); } catch {}
+    }
+    show(data);
+  } catch {
+    $('#err').textContent = 'סיסמה שגויה.';
+  } finally { $('#go').disabled = false; }
+});
+
+// ---------- formatting ----------
+const ils = (n) => n == null ? '—' : (n < 0 ? '-' : '') + '₪' + Math.round(Math.abs(n)).toLocaleString('en-US');
+const sIls = (n) => n == null ? '' : (n >= 0 ? '+' : '-') + '₪' + Math.round(Math.abs(n)).toLocaleString('en-US');
+const nat = (n, c) => ({ ILS: '₪', USD: '$', EUR: '€' }[c] || '') + Math.round(n).toLocaleString('en-US');
+const pct = (n, d = 2) => n == null ? '—' : (n >= 0 ? '▲ ' : '▼ ') + Math.abs(n).toFixed(d) + '%';
+const col = (n) => n == null ? '#4C4677' : n >= 0 ? '#047857' : '#B91C1C';
+const bg = (n) => n == null ? '#F1EEFB' : n >= 0 ? '#D1FAE5' : '#FEE2E2';
+const m2 = (n) => '₪' + Number(n).toLocaleString('en-US', { maximumFractionDigits: 2 });
+const dt = (s) => { const [y, m, d] = s.split('-'); return `${d}.${m}.${y}`; };
+const mon = (s) => { const [y, m] = s.split('-'); return `${m}/${y}`; };
+
+const PAL = {
+  s: ['#6366F1', '#14B8A6', '#3B82F6', '#8B5CF6', '#06B6D4', '#0EA5E9', '#22C55E', '#A855F7', '#64748B', '#2563EB'],
+  l: ['#EC4899', '#F59E0B', '#F97316', '#E11D48', '#D946EF', '#FB7185', '#94A3B8', '#EAB308'],
+};
+const ACCENT = { s: '#6366F1', l: '#EC4899' };
+const HEAD = { s: '#E0E7FF', l: '#FCE7F3' };
+const C = 2 * Math.PI * 76;
+
+// ---------- donut ----------
+function donutHtml(id, aria, items, center) {
+  const sum = items.reduce((a, it) => a + it.v, 0);
+  let cum = 0;
+  const circles = items.map((it, i) => {
+    const len = it.v / sum * C, d = Math.max(len - 2, 0.5);
+    const c = `<circle data-i="${i}" cx="100" cy="100" r="76" fill="none" stroke="${it.color}" stroke-width="26" stroke-dasharray="${d.toFixed(2)} ${(C - d).toFixed(2)}" stroke-dashoffset="${(-cum).toFixed(2)}" style="cursor:pointer;transition:stroke-width .15s,opacity .15s"></circle>`;
+    cum += len; return c;
+  }).join('');
+  const legend = items.map((it, i) => `<button type="button" data-i="${i}"><span class="sq" style="background:${it.color}"></span><span class="lab"><span style="font-weight:600">${esc(it.label)}</span>${it.detail ? `<span class="det">${esc(it.detail)}</span>` : ''}</span><span style="font-weight:700;color:${it.sideColor || '#1A1446'}">${esc(it.side)}</span></button>`).join('');
+  return `<div class="donut" id="${id}">
+    <svg viewBox="0 0 200 200" role="img" aria-label="${esc(aria)}">
+      <circle cx="100" cy="100" r="76" fill="none" stroke="#F1EEFB" stroke-width="26"></circle>
+      <g transform="rotate(-90 100 100)">${circles}</g>
+      <text pointer-events="none" class="c1" x="100" y="80" text-anchor="middle" font-size="11" font-weight="600" fill="#4C4677"></text>
+      <text pointer-events="none" class="c2" x="100" y="106" text-anchor="middle" font-size="21" font-weight="800" fill="#1A1446"></text>
+      <text pointer-events="none" class="c3" x="100" y="128" text-anchor="middle" font-size="12" font-weight="700"></text>
+      <text pointer-events="none" class="c4" x="100" y="144" text-anchor="middle" font-size="10" fill="#4C4677"></text>
+    </svg>
+    <div class="legend">${legend}</div></div>`;
+}
+function wireDonut(id, items, center) {
+  const root = document.getElementById(id);
+  const sum = items.reduce((a, it) => a + it.v, 0);
+  const set = (i) => {
+    const c = i == null ? center.all(sum) : center.hover(items[i], sum);
+    root.querySelector('.c1').textContent = c.l1 || '';
+    root.querySelector('.c2').textContent = c.l2 || '';
+    const t3 = root.querySelector('.c3'); t3.textContent = c.l3 || ''; t3.setAttribute('fill', c.l3c || '#4C4677');
+    root.querySelector('.c4').textContent = c.l4 || '';
+    root.querySelectorAll('circle[data-i]').forEach((el) => {
+      const on = i == null || +el.dataset.i === i;
+      el.setAttribute('stroke-width', i != null && on ? 34 : 26); el.style.opacity = on ? 1 : 0.35;
+    });
+    root.querySelectorAll('.legend button').forEach((b) => b.classList.toggle('on', +b.dataset.i === i));
+  };
+  root.querySelectorAll('[data-i]').forEach((el) => {
+    const i = +el.dataset.i;
+    el.addEventListener('mouseenter', () => set(i)); el.addEventListener('mouseleave', () => set(null));
+    el.addEventListener('focus', () => set(i)); el.addEventListener('blur', () => set(null));
+    el.addEventListener('click', () => set(i));
+  });
+  set(null);
+}
+
+// ---------- page ----------
+function show(D) {
+  $('#login').hidden = true;
+  const app = $('#app'); app.hidden = false;
+  const S = D.people.find((p) => p.id === 's') || D.people[0];
+  const L = D.people.find((p) => p.id === 'l') || D.people[1];
+  const updated = new Date(D.generatedAt).toLocaleString('he-IL', { timeZone: 'Asia/Jerusalem', weekday: 'short', day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+
+  D.people.forEach((p) => { const pal = PAL[p.id] || PAL.s; p.funds.forEach((f, i) => { f.color = pal[i % pal.length]; }); });
+
+  let html = `
+  <section class="hero">
+    <div class="row">
+      <div style="display:flex;flex-direction:column;gap:6px">
+        <h1>החיסכון הפנסיוני של שחר ולוטם</h1>
+        <span class="sub">עודכן: ${esc(updated)} · הכל בש״ח · $1 = ₪${D.fx.USD.toFixed(3)} · €1 = ₪${D.fx.EUR.toFixed(3)}</span>
+      </div>
+    </div>
+    <div class="kpis">
+      <div class="kpi" style="background:#fff;color:#1A1446"><span class="l" style="color:#4C4677">סה״כ צבירה משפחתית</span><span class="v">${ils(D.family.total)}</span><span class="s" style="color:${col(D.family.m)}">${pct(D.family.mPct)} ב־30 הימים האחרונים (${sIls(D.family.m)})</span></div>
+      <div class="kpi" style="background:${D.family.ytd >= 0 ? '#A7F3D0' : '#FECACA'};color:${D.family.ytd >= 0 ? '#053B2A' : '#5B0B0B'}"><span class="l">${D.family.ytd >= 0 ? 'רווח' : 'הפסד'} מתחילת ${D.today.slice(0, 4)}</span><span class="v">${sIls(D.family.ytd)}</span><span class="s">${pct(D.family.ytdPct)} מינואר עד היום</span></div>
+      <div class="kpi" style="background:#BAE6FD;color:#0B2E4A"><span class="l">קצבה צפויה – ${esc(S.name)}</span><span class="v">${ils(S.pensionWith)}<span style="font-size:15px;font-weight:600"> / חודש</span></span><span class="s">ללא המשך הפקדות: ${ils(S.pensionWithout)}</span></div>
+      <div class="kpi" style="background:#FBCFE8;color:#4A0B2E"><span class="l">קצבה צפויה – ${esc(L.name)}</span><span class="v">${ils(L.pensionWith)}<span style="font-size:15px;font-weight:600"> / חודש</span></span><span class="s">ללא המשך הפקדות: ${ils(L.pensionWithout)}</span></div>
+    </div>
+    <span class="sub" style="font-size:13px">קצבה צפויה = סכום הקצבאות מכל הקופות בגיל הפרישה אם ממשיכים להפקיד כמו היום, כולל קצבת זקנה מביטוח לאומי.</span>
+  </section>`;
+
+  // donuts
+  const personItems = (p) => p.funds.filter((f) => f.value).sort((a, b) => b.value - a.value).map((f) => ({
+    label: `${f.kind} · ${f.provider}`, v: f.value, y: f.yPct, color: f.color, side: pct(f.yPct, 1), sideColor: col(f.yPct),
+  }));
+  html += `<section class="donuts">` + D.people.map((p) => `
+    <div class="card">
+      <div style="display:flex;align-items:center;gap:10px"><span class="dot" style="background:${ACCENT[p.id]}"></span><h2>${esc(p.name)}</h2></div>
+      ${donutHtml('d-' + p.id, 'פילוח הצבירה של ' + p.name, personItems(p))}
+      <p class="note">האחוז ליד כל קרן = תשואה מתחילת השנה (ינואר עד היום). העבר עכבר או לחץ לפרטים.</p>
+    </div>`).join('') + `</section>`;
+
+  // growth
+  const g = D.growth, sP = g.people.find((x) => x.id === 's') || g.people[0], lP = g.people.find((x) => x.id === 'l') || g.people[1];
+  const tops = sP.values.map((v, i) => v + (lP ? lP.values[i] : 0));
+  const maxV = Math.max(...tops) * 1.04 || 1;
+  const n = tops.length - 1;
+  const X = (i) => (1000 - i / n * 1000).toFixed(1), Y = (v) => (260 - v / maxV * 250).toFixed(1);
+  const area = (lo, hi) => 'M' + hi.map((v, i) => `${X(i)} ${Y(v)}`).join(' L') + ' L' + lo.map((_, k) => `${X(n - k)} ${Y(lo[n - k])}`).join(' L') + ' Z';
+  const zeros = sP.values.map(() => 0);
+  html += `
+  <section class="card">
+    <div class="row"><h2>איך הכסף גדל ב־12 החודשים האחרונים</h2>
+      <div style="display:flex;gap:16px;font-size:14px;font-weight:600"><span style="display:flex;align-items:center;gap:6px"><span class="sq" style="background:#6366F1"></span>${esc(S.name)}</span><span style="display:flex;align-items:center;gap:6px"><span class="sq" style="background:#EC4899"></span>${esc(L.name)}</span></div></div>
+    <div style="display:flex;flex-wrap:wrap;gap:12px">
+      <span class="chip" style="background:#EEF2FF;color:#312E81">לפני שנה: ${ils(tops[0])}</span>
+      <span class="chip" style="background:#EEF2FF;color:#312E81">היום: ${ils(tops[n])}</span>
+      <span class="chip" style="background:${bg(tops[n] - tops[0])};color:${col(tops[n] - tops[0])}">שינוי: ${sIls(tops[n] - tops[0])}</span>
+    </div>
+    <svg viewBox="0 0 1000 260" preserveAspectRatio="none" width="100%" height="260" role="img" aria-label="גרף צבירה ל־12 חודשים">
+      ${[65, 130, 195].map((y) => `<line x1="0" y1="${y}" x2="1000" y2="${y}" stroke="#ECE8FA" vector-effect="non-scaling-stroke"></line>`).join('')}
+      <path d="${area(zeros, sP.values)}" fill="#6366F1" opacity=".9"></path>
+      ${lP ? `<path d="${area(sP.values, tops)}" fill="#EC4899" opacity=".85"></path>` : ''}
+      <path d="M${tops.map((v, i) => `${X(i)} ${Y(v)}`).join(' L')}" fill="none" stroke="#1A1446" stroke-width="2" vector-effect="non-scaling-stroke"></path>
+    </svg>
+    <div class="months">${g.labels.map((l) => `<span>${esc(l)}</span>`).join('')}</div>
+    <p class="note">הערכה: כל קופה צומחת לפי המדד של המסלול שלה מאז היתרה המדווחת האחרונה (לא כולל הפקדות חדשות). כל דוח חדש מהקופות מאפס את הנקודה לאמת.</p>
+  </section>`;
+
+  // tables
+  for (const p of D.people) {
+    html += `
+    <section style="display:flex;flex-direction:column;gap:12px">
+      <div class="row"><div style="display:flex;align-items:center;gap:10px"><span class="dot" style="background:${ACCENT[p.id]}"></span><h2 style="font-size:24px">הקופות של ${esc(p.name)}</h2></div>
+        <span style="font-size:14px;font-weight:600;color:#4C4677">${p.funds.length} קופות · ${ils(p.total)}</span></div>
+      <div class="tablebox"><div class="t">
+        <div class="tr th" style="background:${HEAD[p.id]}"><span>קרן / קופה</span><span>שווי היום (הערכה)</span><span>שינוי ב־30 יום</span><span>מתחילת השנה</span><span>דמי ניהול (הפקדה · צבירה)</span><span>עלות לשנה</span><span>קצבה צפויה</span><span>מתי אפשר למשוך</span></div>
+        ${p.funds.map((f) => `
+        <div class="tr">
+          <div class="cell"><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><span class="sq" style="background:${f.color}"></span><span style="font-weight:700">${esc(f.kind)}</span>${f.inactive ? '<span class="tag" style="background:#F1EEFB;color:#4C4677">לא פעיל</span>' : ''}</div>
+            <span class="small">${f.url ? `<a href="${esc(f.url)}" target="_blank" rel="noopener">${esc(f.provider)} ↗</a>` : esc(f.provider)} · ${esc(f.track)}</span></div>
+          <div class="cell"><span style="font-weight:700">${f.value == null ? 'אין נתון' : ils(f.value)}</span><span class="small">${f.reported ? `מדווח ${nat(f.reported.amount, f.reported.cur)} ב־${mon(f.reported.date)}` : ''}</span></div>
+          <div class="cell"><span class="pill" style="color:${col(f.mPct)};background:${bg(f.mPct)}">${pct(f.mPct)}</span><span class="small" style="color:${col(f.mPct)};font-weight:600">${sIls(f.mAmt)}</span></div>
+          <div class="cell"><span class="pill" style="color:${col(f.yPct)};background:${bg(f.yPct)}">${pct(f.yPct)}</span><span class="small" style="color:${col(f.yPct)};font-weight:600">${sIls(f.yAmt)}</span></div>
+          <div class="cell"><span>${esc(f.depositFee)} · ${f.accFee == null ? '?' : f.accFee.toFixed(2) + '%'}</span>${f.note ? `<span class="tag" style="background:#FFEDD5;color:#9A3412">${esc(f.note)}</span>` : ''}</div>
+          <span>${ils(f.feeYear)}</span>
+          <span>${ils(f.pension)}</span>
+          <div class="cell"><span style="font-weight:600">${esc(f.liquidity)}</span>${f.liquidityNote ? `<span class="tag" style="background:#D1FAE5;color:#065F46">${esc(f.liquidityNote)}</span>` : ''}</div>
+        </div>`).join('')}
+      </div></div>
+      ${p.footnote ? `<p class="note">${esc(p.footnote)}</p>` : ''}
+    </section>`;
+  }
+
+  // fees
+  const fmax = D.fees.rows.length ? D.fees.rows[0].v : 1;
+  const feeColor = (r) => { const p = D.people.find((x) => x.id === r.person); return p ? ACCENT[p.id] : '#6366F1'; };
+  html += `
+  <section class="card">
+    <div class="row"><h2>כמה דמי ניהול משלמים בשנה</h2><span class="chip" style="background:#FFEDD5;color:#9A3412">סה״כ ${ils(D.fees.total)} לשנה</span></div>
+    <div class="bars">${D.fees.rows.map((r) => `<div class="bar"><span style="font-weight:600">${esc(r.label)}</span><div class="track"><div class="fill" style="width:${(r.v / fmax * 100).toFixed(1)}%;background:${feeColor(r)}"></div></div><span style="font-weight:700;text-align:left">${ils(r.v)}</span></div>`).join('')}</div>
+    <p class="note">דמי ניהול מהצבירה × השווי היום. לא כולל דמי ניהול מהפקדה וקופות שאחוז הדמים שלהן לא ידוע.</p>
+  </section>`;
+
+  // insurance
+  const ins = D.insurance;
+  const insTotal = ins.reduce((a, r) => a + r.monthly, 0);
+  const insItems = ins.map((r) => ({ label: r.label, detail: r.detail, v: r.monthly, color: r.color, side: m2(r.monthly) }));
+  const companies = [...new Map(ins.filter((r) => r.url).map((r) => [r.company, r.url])).entries()];
+  html += `
+  <div class="sep" role="separator"><div></div><span>ביטוחים</span><div></div></div>
+  <section class="card" style="gap:18px">
+    <div class="row"><h2>כמה משלמים על ביטוחים</h2>
+      <div style="display:flex;gap:10px;flex-wrap:wrap"><span class="chip" style="background:#241A5C;color:#fff;font-size:18px;border-radius:12px">${m2(insTotal)} לחודש</span><span class="chip" style="background:#FDE68A;color:#5B3B00;font-size:18px;border-radius:12px">${m2(Math.round(insTotal * 12))} לשנה</span></div></div>
+    ${donutHtml('d-ins', 'פילוח תשלומי הביטוח לפי סוג', insItems)}
+    <div style="display:flex;flex-wrap:wrap;gap:10px;font-size:14px"><span style="font-weight:600;color:#4C4677">אתרי החברות:</span>${companies.map(([c, u]) => `<a href="${esc(u)}" target="_blank" rel="noopener">${esc(c)} ↗</a>`).join('')}</div>
+  </section>
+  <footer>
+    <span>יתרות: הדוח האחרון מכל קופה (מסלקה פנסיונית / דוחות הקופות). שווי יומי: הערכה לפי מדדי השוק (S&P 500, ת״א 125, MSCI World) ושערי בנק ישראל.</span>
+    <span>מתעדכן אוטומטית כל בוקר. <button class="linkbtn" id="logout" type="button">יציאה ושכחת הסיסמה במכשיר</button></span>
+  </footer>`;
+
+  app.innerHTML = html;
+
+  for (const p of D.people) {
+    wireDonut('d-' + p.id, personItems(p), {
+      all: (sum) => ({ l1: 'סה״כ ' + p.name, l2: ils(sum), l3: sIls(p.ytd), l3c: col(p.ytd), l4: 'מתחילת השנה' }),
+      hover: (it, sum) => ({ l1: it.label, l2: ils(it.v), l3: pct(it.y, 1) + ' השנה', l3c: col(it.y), l4: Math.round(it.v / sum * 100) + '% מהצבירה' }),
+    });
+  }
+  wireDonut('d-ins', insItems, {
+    all: (sum) => ({ l1: 'סה״כ לחודש', l2: m2(sum), l3: m2(Math.round(sum * 12)) + ' לשנה' }),
+    hover: (it, sum) => ({ l1: it.label, l2: m2(it.v), l3: Math.round(it.v / sum * 100) + '% · ' + m2(Math.round(it.v * 12)) + ' לשנה' }),
+  });
+  $('#logout').addEventListener('click', () => { try { localStorage.removeItem(STORE); } catch {} location.reload(); });
+}
+</script>
+</body>
+</html>
