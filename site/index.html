@@ -171,6 +171,8 @@ const m2 = (n) => '₪' + Number(n).toLocaleString('en-US', { maximumFractionDig
 const dt = (s) => { const [y, m, d] = s.split('-'); return `${d}.${m}.${y}`; };
 const mon = (s) => { const [y, m] = s.split('-'); return `${m}/${y}`; };
 
+const HEB_M = ['ינואר', 'פברואר', 'מרץ', 'אפריל', 'מאי', 'יוני', 'יולי', 'אוגוסט', 'ספטמבר', 'אוקטובר', 'נובמבר', 'דצמבר'];
+const monY = (s) => { const [y, m] = s.split('-'); return `${HEB_M[+m - 1]} ${y}`; };
 const daysSince = (s) => Math.floor((Date.now() - new Date(s + 'T12:00:00Z')) / 86400000);
 const agoTxt = (s) => { const d = daysSince(s); return d <= 0 ? 'היום' : d === 1 ? 'אתמול' : d < 60 ? `לפני ${d} ימים` : `לפני ${Math.round(d / 30)} חודשים`; };
 const isStale = (f) => !f.reported ? true : daysSince(f.reported.date) > (f.cur === 'ILS' ? 120 : 90);
@@ -323,8 +325,8 @@ function show(D) {
   if (stale.length) {
     const oldestIl = staleIl.filter((x) => x.f.reported).map((x) => x.f.reported.date).sort()[0];
     html += `<section class="banner" aria-label="תזכורת לעדכון"><h2 style="font-size:19px">הגיע הזמן לעדכן</h2>
-      <ul>${staleAbroad.map(({ p, f }) => `<li><b>${esc(p.name)} · ${esc(f.kind)}</b><span class="small">${f.reported ? 'עודכן ' + dt(f.reported.date) + ' (' + agoTxt(f.reported.date) + ')' : 'אין נתון בכלל'}</span>${f.url ? `<a href="${esc(f.url)}" target="_blank" rel="noopener" style="font-size:14px">1. צלם מסך באתר ↗</a>` : ''}<button type="button" class="btn-sm" data-upd="${esc(f.id)}">2. צרף כאן</button></li>`).join('')}
-      ${staleIl.length ? `<li><b>${staleIl.length} קופות בישראל</b><span class="small">${oldestIl ? 'הנתון הישן ביותר מ־' + dt(oldestIl) + ' (' + agoTxt(oldestIl) + ')' : ''} · מתעדכנות מדוח המסלקה – העלה את הדוח לשיחה עם Claude</span></li>` : ''}</ul>
+      <ul>${staleAbroad.map(({ p, f }) => `<li><b>${esc(p.name)} · ${esc(f.kind)}</b><span class="small">${f.reported ? 'עודכן ' + monY(f.reported.date) : 'אין נתון בכלל'}</span>${f.url ? `<a href="${esc(f.url)}" target="_blank" rel="noopener" style="font-size:14px">1. צלם מסך באתר ↗</a>` : ''}<button type="button" class="btn-sm" data-upd="${esc(f.id)}">2. צרף כאן</button></li>`).join('')}
+      ${staleIl.length ? `<li><b>${staleIl.length} קופות בישראל</b><span class="small">${oldestIl ? 'הנתון הישן ביותר מ' + monY(oldestIl) : ''} · מתעדכנות מדוח המסלקה – העלה את הדוח לשיחה עם Claude</span></li>` : ''}</ul>
       <p class="note">תזכורת קופצת כשנתון ישן מ־3 חודשים (חו״ל) או 4 חודשים (ישראל). ליד כל קופה בטבלה יש גם כפתור "עדכן יתרה".</p></section>`;
   }
 
@@ -378,7 +380,7 @@ function show(D) {
         <div class="tr">
           <div class="cell"><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><span class="sq" style="background:${f.color}"></span><span style="font-weight:700">${esc(f.kind)}</span>${f.inactive ? '<span class="tag" style="background:#F1EEFB;color:#4C4677">לא פעיל</span>' : ''}</div>
             <span class="small">${f.url ? `<a href="${esc(f.url)}" target="_blank" rel="noopener">${esc(f.provider)} ↗</a>` : esc(f.provider)} · ${esc(f.track)}</span></div>
-          <div class="cell"><span style="font-weight:700">${f.value == null ? 'אין נתון' : ils(f.value)}</span>${f.reported ? `<span class="small">${nat(f.reported.amount, f.reported.cur)} · עודכן ${dt(f.reported.date)} (${agoTxt(f.reported.date)})</span>` : ''}${isStale(f) ? '<span class="tag" style="background:#FFEDD5;color:#9A3412">הגיע הזמן לעדכן</span>' : ''}<button type="button" class="btn-sm" data-upd="${esc(f.id)}">עדכן יתרה</button></div>
+          <div class="cell"><span style="font-weight:700">${f.value == null ? 'אין נתון' : ils(f.value)}</span>${f.reported ? `<span class="small">${nat(f.reported.amount, f.reported.cur)} · עודכן ${monY(f.reported.date)}</span>` : ''}${isStale(f) ? '<span class="tag" style="background:#FFEDD5;color:#9A3412">הגיע הזמן לעדכן</span>' : ''}<button type="button" class="btn-sm" data-upd="${esc(f.id)}">עדכן יתרה</button></div>
           <div class="cell"><span class="pill" style="color:${col(f.mPct)};background:${bg(f.mPct)}">${pct(f.mPct)}</span><span class="small" style="color:${col(f.mPct)};font-weight:600">${sIls(f.mAmt)}</span></div>
           <div class="cell"><span class="pill" style="color:${col(f.yPct)};background:${bg(f.yPct)}">${pct(f.yPct)}</span><span class="small" style="color:${col(f.yPct)};font-weight:600">${sIls(f.yAmt)}</span></div>
           <div class="cell"><span>${esc(f.depositFee)} · ${f.accFee == null ? '?' : f.accFee.toFixed(2) + '%'}</span>${f.note ? `<span class="tag" style="background:#FFEDD5;color:#9A3412">${esc(f.note)}</span>` : ''}</div>
