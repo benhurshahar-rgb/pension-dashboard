@@ -223,6 +223,7 @@ export function computePayload(state, market, today) {
     growth,
     fees: { rows: feeRows },
     insurance: state.insurance || [],
+    coverage: state.coverage || [],
     marketLog: market?.log || [],
   };
 }

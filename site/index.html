@@ -113,6 +113,9 @@ h3{margin:0;font-size:19px;font-weight:800}
 .hist{background:#FAF8FF;border-bottom:1px solid var(--line);padding:12px 20px 16px;display:flex;flex-direction:column;gap:6px}
 .hrow{display:grid;grid-template-columns:110px 130px 1fr 220px 110px 130px;gap:12px;align-items:center;font-size:14px}
 .hh{font-size:12px;font-weight:700;color:var(--muted)}
+.covgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}
+.cov{background:#FAF8FF;border-radius:14px;padding:14px 16px;display:flex;flex-direction:column;gap:6px}
+.covrow{display:flex;justify-content:space-between;gap:10px;font-size:14px;border-bottom:1px dashed #E5E0F8;padding-bottom:4px}
 </style>
 </head>
 <body>
@@ -620,6 +623,14 @@ function show(D) {
     <div class="row"><h2>כמה משלמים על ביטוחים</h2>
       <div style="display:flex;gap:10px;flex-wrap:wrap"><span class="chip" style="background:#241A5C;color:#fff;font-size:18px;border-radius:12px">${m2(insTotal)} לחודש</span><span class="chip" style="background:#FDE68A;color:#5B3B00;font-size:18px;border-radius:12px">${m2(Math.round(insTotal * 12))} לשנה</span></div></div>
     ${donutHtml('d-ins', 'פילוח תשלומי הביטוח לפי סוג', insItems)}
+    ${(D.coverage || []).length ? `<h3 style="margin-top:6px">כיסויים שמובנים בפנסיה ובחיסכון</h3>
+    <p class="note">את אלה לא משלמים מהכיס – העלות מנוכה מהצבירה בקופה. טוב לדעת מה מכוסה, כדי לא לשלם פעמיים על אותו כיסוי.</p>
+    <div class="covgrid">${D.coverage.map((c) => `<div class="cov">
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">${ownerPill(c.who, c.who === 'l' ? 'לוטם' : 'שחר')}<b>${esc(c.source)}</b></div>
+      ${c.items.map(([k, v]) => `<div class="covrow"><span>${esc(k)}</span><b>${esc(v)}</b></div>`).join('')}
+      <span class="small">עלות: ${esc(c.cost)}</span>
+      ${c.flag ? `<span class="tag" style="background:#FFEDD5;color:#9A3412;align-self:flex-start">⚠ ${esc(c.flag)}</span>` : ''}
+    </div>`).join('')}</div>` : ''}
     <div style="display:flex;flex-wrap:wrap;gap:10px;font-size:14px"><span style="font-weight:600;color:#4C4677">אתרי החברות:</span>${companies.map(([c, u]) => `<a href="${esc(u)}" target="_blank" rel="noopener">${esc(c)} ↗</a>`).join('')}</div>
   </section>
   <footer>
