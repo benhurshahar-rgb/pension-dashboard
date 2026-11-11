@@ -406,8 +406,8 @@ function renderGrowth() {
   const X = (i) => i / n * W, Y = (v) => H - (v - lo) / (hi - lo) * H;
   const line = vals.map((v, i) => `${X(i).toFixed(1)},${Y(v).toFixed(1)}`).join(' ');
   const area = `M${X(0)},${H} L${line.replace(/ /g, ' L')} L${X(n)},${H} Z`;
-  const color = UI.gWho === 's' ? '#6366F1' : UI.gWho === 'l' ? '#EC4899' : '#7C3AED';
   const start = vals[0], end = vals[n], ch = end - start, chP = (end / start - 1) * 100;
+  const color = ch >= 0 ? '#059669' : '#DC2626'; // green when the period ended up, red when down
   const depOf = (id) => { const q = P(id).dep; return q ? q[idx[n]] - q[idx[0]] : 0; };
   const depIn = UI.gWho === 'all' ? depOf('s') + depOf('l') : depOf(UI.gWho);
   const imax = vals.indexOf(Math.max(...vals)), imin = vals.indexOf(Math.min(...vals));
