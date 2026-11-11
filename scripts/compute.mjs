@@ -102,7 +102,17 @@ export function makeModel(market, fallbackFx) {
     return r;
   };
   const ils = (f, d) => { const n = native(f, d); return n == null ? null : n * fx(f.cur, d); };
-  return { fx, native, ils, growth, returnBetween };
+  // Share of the fund's value that moves with a foreign currency (vs the shekel).
+  // Abroad: the whole fund. Israeli tracks: the S&P 500 part (assumed unhedged) – an estimate.
+  const exposure = (f) => {
+    if (f.cur === 'USD') return { USD: 1, EUR: 0 };
+    if (f.cur === 'EUR') return { USD: 0, EUR: 1 };
+    const w = (TRACKS[f.track] || TRACKS.general).w, tot = Object.values(w).reduce((a, b) => a + b, 0);
+    return { USD: (w.spx_ils || 0) / tot, EUR: 0 };
+  };
+  // Weighted currency change between two dates, e.g. -0.05 = the fund lost 5% just from the exchange rate.
+  const fxChange = (e, a, b) => e.USD * (fx('USD', b) / fx('USD', a) - 1) + e.EUR * (fx('EUR', b) / fx('EUR', a) - 1);
+  return { fx, native, ils, growth, returnBetween, exposure, fxChange, comp };
 }
 
 const HEB_MONTHS = ['ינו׳', 'פבר׳', 'מרץ', 'אפר׳', 'מאי', 'יוני', 'יולי', 'אוג׳', 'ספט׳', 'אוק׳', 'נוב׳', 'דצמ׳'];
@@ -135,10 +145,10 @@ export function computePayload(state, market, today) {
   const yearStart = `${Number(today.slice(0, 4)) - 1}-12-31`;
   const pct = (a, b) => (a != null && b ? (a / b - 1) * 100 : null);
 
-  const fam = { total: 0, ytd: 0, m: 0 };
+  const fam = { total: 0, ytd: 0, m: 0, fxY: 0, usd: 0, eur: 0 };
   const feeRows = [];
   const people = state.people.map((p) => {
-    let total = 0, ytd = 0, mm = 0;
+    let total = 0, ytd = 0, mm = 0, fxImpact = 0, usdNow = 0, eurNow = 0;
     let pW = p.socialSecurity || 0, pWo = p.socialSecurity || 0;
     const funds = p.funds.map((f) => {
       const now = model.ils(f, today);
@@ -174,6 +184,11 @@ export function computePayload(state, market, today) {
         });
       }
 
+      const ex = model.exposure(f);
+      const fxM = model.fxChange(ex, monthAgo, today), fxY = model.fxChange(ex, yearStart, today), fx3 = model.fxChange(ex, threeY, today);
+      // How many shekels of this year's change came only from the exchange rate.
+      const fxYAmt = now != null ? now - now / (1 + fxY) : 0;
+      fxImpact += fxYAmt; usdNow += (now || 0) * ex.USD; eurNow += (now || 0) * ex.EUR;
       const mu = monthsUntil(f.liquidityDate, today);
       return {
         id: f.id, category: f.category, kind: f.kind, provider: f.provider, url: f.url, cur: f.cur, inactive: !!f.inactive,
@@ -189,13 +204,14 @@ export function computePayload(state, market, today) {
           .map((r) => ({ ...r, deposits: f.yearlyDeposits ? f.yearlyDeposits[r.year] ?? null : null, transfer: f.transfers ? f.transfers[r.year] ?? null : null, ret: r.partial ? f.ytdReported ?? null : (f.annualReturns ? f.annualReturns[r.year] ?? null : null) })) : null,
         depositFee: f.depositFee ?? '?', accFee: f.accFee, accFeeApprox: !!f.accFeeApprox, feeYear: accCost, pension,
         pensionNative: f.pensionCur && f.pensionWith != null ? { amount: f.pensionWith, cur: f.pensionCur } : null,
+        exp: ex, fxM, fxY, fx3, fxYAmt,
         liquidity: f.liquidity || '—',
         liquidityNote: mu == null ? null : mu <= 0 ? 'נזילה עכשיו' : mu <= 12 ? `נזילה בעוד ${mu} חודשים` : null,
         note: f.note || null,
       };
     });
-    fam.total += total; fam.ytd += ytd; fam.m += mm;
-    return { id: p.id, name: p.name, total, ytd, m: mm, pensionWith: pW, pensionWithout: pWo, funds, footnote: p.footnote || '', depositsPaused: !!p.depositsPaused, resumeNote: p.resumeNote || '' };
+    fam.total += total; fam.ytd += ytd; fam.m += mm; fam.fxY += fxImpact; fam.usd += usdNow; fam.eur += eurNow;
+    return { id: p.id, name: p.name, total, ytd, m: mm, fxY: fxImpact, usd: usdNow, eur: eurNow, pensionWith: pW, pensionWithout: pWo, funds, footnote: p.footnote || '', depositsPaused: !!p.depositsPaused, resumeNote: p.resumeNote || '' };
   });
 
   // growth: every trading day in the last 5 years (+ today), per person, in ILS.
@@ -207,8 +223,17 @@ export function computePayload(state, market, today) {
     people: state.people.map((p) => ({
       id: p.id, name: p.name,
       values: days.map((d) => Math.round(p.funds.reduce((a, f) => a + (model.ils(f, d) || 0), 0))),
+      usd: days.map((d) => Math.round(p.funds.reduce((a, f) => a + (model.ils(f, d) || 0) * model.exposure(f).USD, 0))),
+      eur: days.map((d) => Math.round(p.funds.reduce((a, f) => a + (model.ils(f, d) || 0) * model.exposure(f).EUR, 0))),
     })),
+    fx: { USD: days.map((d) => +model.fx('USD', d).toFixed(4)), EUR: days.map((d) => +model.fx('EUR', d).toFixed(4)) },
   };
+
+  // Currency box: S&P 500 in dollars vs in shekels, per period.
+  const chg = (k, a, b) => { const x = model.comp(k, a), y = model.comp(k, b); return x && y ? (y / x - 1) * 100 : null; };
+  const fxPct = (c, a, b) => (model.fx(c, b) / model.fx(c, a) - 1) * 100;
+  const currency = [['1m', 'חודש', monthAgo], ['ytd', `מתחילת ${today.slice(0, 4)}`, yearStart], ['1y', 'שנה', addDays(today, -365)], ['3y', '3 שנים', threeY], ['5y', '5 שנים', fiveY]]
+    .map(([id, label, from]) => ({ id, label, from, spxUsd: chg('spx_usd', from, today), usd: fxPct('USD', from, today), spxIls: chg('spx_ils', from, today), eur: fxPct('EUR', from, today) }));
 
   feeRows.sort((a, b) => b.cost - a.cost);
 
@@ -216,7 +241,8 @@ export function computePayload(state, market, today) {
     generatedAt: new Date().toISOString(),
     today,
     fx: { USD: model.fx('USD', today), EUR: model.fx('EUR', today) },
-    family: { total: fam.total, ytd: fam.ytd, ytdPct: pct(fam.total, fam.total - fam.ytd), m: fam.m, mPct: pct(fam.total, fam.total - fam.m) },
+    family: { total: fam.total, ytd: fam.ytd, ytdPct: pct(fam.total, fam.total - fam.ytd), m: fam.m, mPct: pct(fam.total, fam.total - fam.m), fxY: fam.fxY, usd: fam.usd, eur: fam.eur },
+    currency,
     people,
     categories: CATEGORIES,
     benchmarks: BENCHMARKS,

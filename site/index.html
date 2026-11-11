@@ -48,6 +48,7 @@ h2{margin:0;font-size:22px;font-weight:800}
 .t{min-width:1220px}
 .tr.ft{grid-template-columns:1.7fr 0.9fr 1.6fr 0.9fr 0.9fr 1.3fr 1.3fr 1fr}
 .tr{display:grid;grid-template-columns:0.7fr 2fr 1.4fr 1fr 1fr 1fr 1.2fr 0.9fr 1fr 1.2fr;gap:12px;padding:14px 20px;border-bottom:1px solid var(--line);align-items:center;font-size:15px}
+.tr.cur{grid-template-columns:120px repeat(4,1fr)}
 .th{font-size:13px;font-weight:700}
 .cell{display:flex;flex-direction:column;gap:3px;min-width:0;align-items:flex-start}
 .small{font-size:12px;color:var(--muted)}
@@ -366,7 +367,10 @@ function wireInfo(root) {
 }
 
 // ---------- shared UI state ----------
-const UI = { openHist: {}, sortCat: {}, feeSort: 'desc', feeWho: 'all', gWho: 'all', range: '1y', from: null, to: null };
+const UI = { openHist: {}, sortCat: {}, feeSort: 'desc', feeWho: 'all', gWho: 'all', range: '1y', from: null, to: null, fx: true };
+// Return without the exchange-rate part: (1+r)/(1+fx)-1.
+const noFx = (p, c) => p == null ? null : ((1 + p / 100) / (1 + (c || 0)) - 1) * 100;
+const fxSeg = () => `<div class="seg" role="group" aria-label="השפעת מטבע">${[['on', 'כולל השפעת מטבע'], ['off', 'בנטרול הדולר והאירו']].map(([v, l]) => `<button type="button" data-fxt="${v}" aria-pressed="${(v === 'on') === UI.fx}">${l}</button>`).join('')}</div>`;
 const addD = (s, n) => new Date(Date.parse(s + 'T00:00:00Z') + n * 864e5).toISOString().slice(0, 10);
 const shortMoney = (v) => v >= 1e6 ? '₪' + (v / 1e6).toFixed(2).replace(/\.?0+$/, '') + 'M' : '₪' + Math.round(v / 1e3) + 'K';
 const ownerPill = (pid, name) => `<span class="owner" style="background:${HEAD[pid]};color:${pid === 'l' ? '#831843' : '#312E81'}">${esc(name)}</span>`;
@@ -386,9 +390,13 @@ function renderGrowth() {
   const to = UI.range === 'custom' && UI.to ? UI.to : last;
   if (from < first) from = first;
   const idx = dates.map((d, i) => (d >= from && d <= to ? i : -1)).filter((i) => i >= 0);
-  const series = (i) => UI.gWho === 's' ? P('s').values[i] : UI.gWho === 'l' ? P('l').values[i] : P('s').values[i] + P('l').values[i];
   const box = $('#growthBody');
   if (idx.length < 2) { box.innerHTML = '<p class="note">אין מספיק נתונים לטווח הזה.</p>'; return; }
+  const b0 = idx[0];
+  // Without currency: the foreign part is valued at the exchange rate of the range's first day.
+  const pv = (id, i) => { const q = P(id); if (UI.fx || !q.usd) return q.values[i];
+    return q.values[i] - q.usd[i] - q.eur[i] + q.usd[i] * g.fx.USD[b0] / g.fx.USD[i] + q.eur[i] * g.fx.EUR[b0] / g.fx.EUR[i]; };
+  const series = (i) => UI.gWho === 's' ? pv('s', i) : UI.gWho === 'l' ? pv('l', i) : pv('s', i) + pv('l', i);
   const vals = idx.map(series), ds = idx.map((i) => dates[i]);
   let lo = Math.min(...vals), hi = Math.max(...vals);
   const pad = (hi - lo) * 0.12 || hi * 0.02; lo -= pad; hi += pad;
@@ -410,6 +418,7 @@ function renderGrowth() {
       <div><span class="gl">הכי גבוה</span><b>${ils(vals[imax])}</b><span class="gl">${dt(ds[imax])}</span></div>
       <div><span class="gl">הכי נמוך</span><b>${ils(vals[imin])}</b><span class="gl">${dt(ds[imin])}</span></div>
     </div>
+    ${UI.fx ? '' : `<p class="note" style="margin:0">מוצג בנטרול מטבע: החלק שמושקע בחו״ל מחושב לפי שער הדולר והאירו של ${dt(ds[0])}, כאילו השער לא זז.</p>`}
     <div class="gwrap">
       <div class="yaxis">${ticks.map((t) => `<span style="top:${(Y(t) / H * 100).toFixed(2)}%">${shortMoney(t)}</span>`).join('')}</div>
       <div class="gplot" id="gplot">
@@ -433,7 +442,7 @@ function renderGrowth() {
     cur.hidden = dot.hidden = tip.hidden = false;
     cur.style.left = xPct + '%'; dot.style.left = xPct + '%'; dot.style.top = yPct + '%';
     const gi = idx[i];
-    const parts = UI.gWho === 'all' ? `<span>שחר ${ils(P('s').values[gi])}</span><span>לוטם ${ils(P('l').values[gi])}</span>` : '';
+    const parts = UI.gWho === 'all' ? `<span>שחר ${ils(pv('s', gi))}</span><span>לוטם ${ils(pv('l', gi))}</span>` : '';
     tip.innerHTML = `<b>${dt(ds[i])}</b><span style="font-size:16px;font-weight:800">${ils(vals[i])}</span><span style="color:${col(vals[i] - start)}">${sIls(vals[i] - start)} מתחילת התקופה</span>${parts}`;
     tip.style.left = Math.min(Math.max(xPct, 14), 86) + '%';
   };
@@ -480,7 +489,10 @@ function renderCompare() {
           <div class="cell"><div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap"><span class="sq" style="background:${f.color}"></span><span style="font-weight:700">${esc(f.kind)}</span>${f.inactive ? '<span class="tag" style="background:#F1EEFB;color:#4C4677">לא פעיל</span>' : ''}</div>
             <span class="small">${f.url ? `<a href="${esc(f.url)}" target="_blank" rel="noopener">${esc(f.provider)} ↗</a>` : esc(f.provider)}</span>${f.note ? `<span class="tag" style="background:#FFEDD5;color:#9A3412">${esc(f.note)}</span>` : ''}${f.years ? `<button type="button" class="btn-sm" data-hist="${esc(f.id)}" aria-expanded="${!!UI.openHist[f.id]}">היסטוריה לפי שנים ${UI.openHist[f.id] ? '▲' : '▼'}</button>` : ''}</div>
           <div class="cell"><span style="font-weight:700">${f.value == null ? 'אין נתון' : ils(f.value)}</span>${f.reported ? `<span class="small">${nat(f.reported.amount, f.reported.cur)} · עודכן ${monY(f.reported.date)}</span>` : ''}${isStale(f) ? '<span class="tag" style="background:#FFEDD5;color:#9A3412">הגיע הזמן לעדכן</span>' : ''}<button type="button" class="btn-sm" data-upd="${esc(f.id)}">עדכן יתרה</button></div>
-          ${['m', 'y', 'y3'].map((k) => `<div class="cell"><span class="pill" style="color:${col(f[k + 'Pct'])};background:${bg(f[k + 'Pct'])}">${k === 'y3' && !f.y3Real ? '≈ ' : ''}${pct(f[k + 'Pct'])}</span><span class="small" style="color:${col(f[k + 'Pct'])};font-weight:600">${sIls(f[k + 'Amt'])}</span></div>`).join('')}
+          ${['m', 'y', 'y3'].map((k) => { const c = f[{ m: 'fxM', y: 'fxY', y3: 'fx3' }[k]] || 0, fxShare = (f.exp ? f.exp.USD + f.exp.EUR : 0);
+            const v = UI.fx ? f[k + 'Pct'] : noFx(f[k + 'Pct'], c), a = UI.fx ? f[k + 'Amt'] : (v == null || f.value == null ? null : f.value - f.value / (1 + v / 100));
+            const cur = f.exp && f.exp.EUR ? 'אירו' : 'דולר';
+            return `<div class="cell"><span class="pill" style="color:${col(v)};background:${bg(v)}">${k === 'y3' && !f.y3Real ? '≈ ' : ''}${pct(v)}</span><span class="small" style="color:${col(v)};font-weight:600">${sIls(a)}</span>${fxShare >= 0.3 && Math.abs(c) >= 0.001 ? `<span class="small" title="כמה מהשינוי הגיע רק משער ה${cur}">${UI.fx ? 'מזה ' + cur + ': ' + pct(c * 100) : 'בלי ה' + cur}</span>` : ''}</div>`; }).join('')}
           <span>${esc(f.depositFee)} · ${f.accFee == null ? '?' : (f.accFeeApprox ? '≈' : '') + f.accFee.toFixed(2) + '%'}</span>
           <span>${ils(f.feeYear)}</span>
           <div class="cell"><span>${ils(f.pension)}</span>${f.pensionNative ? `<span class="small">${nat(f.pensionNative.amount, f.pensionNative.cur)} לחודש</span>` : ''}</div>
@@ -492,6 +504,29 @@ function renderCompare() {
   wireInfo($('#compareBody'));
   $('#compareBody').querySelectorAll('[data-hist]').forEach((b) => b.addEventListener('click', () => { UI.openHist[b.dataset.hist] = !UI.openHist[b.dataset.hist]; renderCompare(); }));
   $('#compareBody').querySelectorAll('[data-upd]').forEach((b) => b.addEventListener('click', () => openUpdate(b.dataset.upd)));
+}
+
+// ---------- currency effect ----------
+function currencyCard(D) {
+  const C = D.currency || []; if (!C.length) return '';
+  const y = C.find((c) => c.id === 'ytd') || C[0], F = D.family;
+  const cell = (v) => `<span class="pill" style="justify-self:start;color:${col(v)};background:${bg(v)}">${v == null ? '—' : pct(v)}</span>`;
+  const dir = (v) => v >= 0 ? 'עלה' : 'ירד';
+  return `<section class="card" aria-label="השפעת הדולר והאירו">
+    <div class="row"><h2>השפעת הדולר והאירו</h2><span class="small">$1 = ₪${D.fx.USD.toFixed(3)} · €1 = ₪${D.fx.EUR.toFixed(3)}</span></div>
+    <p style="margin:0;font-size:16px;line-height:1.6">קרן שעוקבת אחרי ה־S&P 500 קונה מניות בדולרים. לכן הרווח בשקלים מורכב משני חלקים: <b>כמה המדד עלה בדולרים</b> ו<b>כמה הדולר השתנה מול השקל</b>.
+      ${y.spxUsd != null ? `לדוגמה ${esc(y.label)}: ה־S&P 500 ${dir(y.spxUsd)} <b>${pct(y.spxUsd)}</b> בדולרים, הדולר ${dir(y.usd)} <b>${pct(y.usd)}</b> מול השקל – ולכן בשקלים: <b style="color:${col(y.spxIls)}">${pct(y.spxIls)}</b>.` : ''}</p>
+    <div class="tablebox"><div class="t" style="min-width:640px">
+      <div class="tr th cur"><span>תקופה</span><span>S&P 500 בדולרים</span><span>הדולר מול השקל</span><span>S&P 500 בשקלים</span><span>האירו מול השקל</span></div>
+      ${C.map((c) => `<div class="tr cur"><b>${esc(c.label)}</b>${cell(c.spxUsd)}${cell(c.usd)}${cell(c.spxIls)}${cell(c.eur)}</div>`).join('')}
+    </div></div>
+    <div class="gstats">
+      <div><span class="gl">הכסף שלכם שחשוף לדולר</span><b>${ils(F.usd)}</b><span class="gl">${Math.round(F.usd / F.total * 100)}% מהכל</span></div>
+      <div><span class="gl">חשוף לאירו</span><b>${ils(F.eur)}</b><span class="gl">${Math.round(F.eur / F.total * 100)}% מהכל</span></div>
+      <div style="background:${bg(F.fxY)};color:${col(F.fxY)}"><span class="gl" style="color:inherit">השפעת השער מתחילת ${D.today.slice(0, 4)}</span><b>${sIls(F.fxY)}</b><span class="gl" style="color:inherit">${F.fxY >= 0 ? 'נוסף לכם' : 'ירד לכם'} רק בגלל שער המטבע</span></div>
+    </div>
+    <p class="note">זו הערכה: מניחים שמסלולי S&P 500 בקופות בישראל לא מגדרים מטבע, שבמסלול מניות כ־60% בחו״ל ובמסלול כללי כ־35%. בפועל חלק מהקופות מגדרות חלק מהחשיפה, ולכן ההשפעה בפועל יכולה להיות קטנה יותר. הכפתור "בנטרול הדולר והאירו" בגרף ובטבלאות מראה את התשואה כאילו השער לא זז.</p>
+  </section>`;
 }
 
 // ---------- fees vs market ----------
@@ -552,7 +587,7 @@ function show(D) {
     </div>
     <div class="kpis">
       <div class="kpi" style="background:#fff;color:#1A1446"><span class="l" style="color:#4C4677">סה״כ צבירה משפחתית</span><span class="v">${ils(D.family.total)}</span><span class="s" style="color:${col(D.family.m)}">${pct(D.family.mPct)} ב־30 הימים האחרונים (${sIls(D.family.m)})</span></div>
-      <div class="kpi" style="background:${D.family.ytd >= 0 ? '#A7F3D0' : '#FECACA'};color:${D.family.ytd >= 0 ? '#053B2A' : '#5B0B0B'}"><span class="l">${D.family.ytd >= 0 ? 'רווח' : 'הפסד'} מתחילת ${D.today.slice(0, 4)}</span><span class="v">${sIls(D.family.ytd)}</span><span class="s">${pct(D.family.ytdPct)} מינואר עד היום</span></div>
+      <div class="kpi" style="background:${D.family.ytd >= 0 ? '#A7F3D0' : '#FECACA'};color:${D.family.ytd >= 0 ? '#053B2A' : '#5B0B0B'}"><span class="l">${D.family.ytd >= 0 ? 'רווח' : 'הפסד'} מתחילת ${D.today.slice(0, 4)}</span><span class="v">${sIls(D.family.ytd)}</span><span class="s">${pct(D.family.ytdPct)} מינואר עד היום${D.family.fxY ? ` · מזה שער המטבע: ${sIls(D.family.fxY)}` : ''}</span></div>
       ${pensionKpi(S, '#BAE6FD', '#0B2E4A')}
       ${pensionKpi(L, '#FBCFE8', '#4A0B2E')}
     </div>
@@ -587,7 +622,7 @@ function show(D) {
   html += `
   <section class="card" aria-label="גרף צבירה">
     <div class="row"><h2>איך הכסף השתנה לאורך זמן</h2>
-      ${seg('who', [['s', 'שחר'], ['l', 'לוטם'], ['all', 'ביחד']], UI.gWho)}</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">${fxSeg()}${seg('who', [['s', 'שחר'], ['l', 'לוטם'], ['all', 'ביחד']], UI.gWho)}</div></div>
     <div class="row" style="justify-content:flex-start">
       ${seg('range', [['1m', 'חודש'], ['ytd', 'מתחילת השנה'], ['1y', 'שנה'], ['3y', '3 שנים'], ['5y', '5 שנים'], ['custom', 'תאריכים']], UI.range)}
       <div id="customDates" class="custom" ${UI.range === 'custom' ? '' : 'hidden'}>
@@ -599,9 +634,11 @@ function show(D) {
     <div id="growthBody"></div>
     <p class="note" id="growthNote"></p>
   </section>
+  ${currencyCard(D)}
 
   <section style="display:flex;flex-direction:column;gap:14px" aria-label="השוואה לפי סוג קופה">
-    <div class="row"><h2 style="font-size:24px">השוואה לפי סוג קופה</h2><span class="small">לחצו על "שווי היום ↓" בכל טבלה כדי למיין אותה · על ה־? כדי להבין מה זה</span></div>
+    <div class="row"><h2 style="font-size:24px">השוואה לפי סוג קופה</h2>${fxSeg()}</div>
+    <span class="small">לחצו על "שווי היום ↓" בכל טבלה כדי למיין אותה · על ה־? כדי להבין מה זה · "בנטרול הדולר והאירו" מראה כמה הקופה הייתה מרוויחה אילו השער לא היה זז</span>
     <div id="compareBody" style="display:flex;flex-direction:column;gap:22px"></div>
     <p class="note">${esc(S.footnote)}</p><p class="note">${esc(L.footnote)}</p>
     <p class="note">"3 שנים ≈" = הערכה לפי מדד המסלול של כל קופה (בלי הפקדות). 30 יום ומתחילת השנה מבוססים על הדוח האחרון של הקופה ועל תנועות השוק מאז.</p>
@@ -655,6 +692,11 @@ function show(D) {
   segWire('who', (v) => { UI.gWho = v; renderGrowth(); });
   segWire('range', (v) => { UI.range = v; $('#customDates').hidden = v !== 'custom'; if (v === 'custom') { UI.from = $('#gFrom').value; UI.to = $('#gTo').value; } renderGrowth(); });
   segWire('fee', (v) => { UI.feeWho = v; renderFees(); });
+  app.querySelectorAll('[data-fxt]').forEach((b) => b.addEventListener('click', () => {
+    UI.fx = b.dataset.fxt === 'on';
+    app.querySelectorAll('[data-fxt]').forEach((x) => x.setAttribute('aria-pressed', (x.dataset.fxt === 'on') === UI.fx));
+    renderGrowth(); renderCompare();
+  }));
   $('#gApply').addEventListener('click', () => { UI.from = $('#gFrom').value; UI.to = $('#gTo').value; if (UI.from > UI.to) [UI.from, UI.to] = [UI.to, UI.from]; renderGrowth(); });
   const realF = D.people.flatMap((p) => p.funds.filter((f) => f.realSince).map((f) => `${p.name} – ${f.kind} ${f.provider.split(' – ')[0]} (מ־${f.realSince.slice(0, 4)})`));
   $('#growthNote').textContent = (realF.length ? `נתוני אמת מהדוחות השנתיים (כולל הפקדות): ${realF.join(' · ')}. ` : '') + 'בשאר הקופות, ובתקופה שלפני הדוח הראשון, הגרף הוא הערכה: השווי של היום לפי תנועות השוק במסלול של כל קופה, בלי הפקדות. ככל שתעלו עוד דוחות שנתיים – הגרף יהיה מדויק יותר.';
