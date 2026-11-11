@@ -61,9 +61,48 @@ export function makeModel(market, fallbackFx) {
     }
     return wsum ? g / wsum : 1;
   };
-  const native = (f, d) => (f.balance == null ? null : f.balance * growth(f.track, f.balanceDate, d));
+  // Known real balances (annual reports etc.) + the latest balance. Between two real points: market path,
+  // corrected linearly so it lands exactly on the next real point (this spreads deposits over the period).
+  const points = (f) => {
+    if (f._pts) return f._pts;
+    const m = new Map((f.history || []).map((h) => [h.date, h.balance]));
+    if (f.balance != null && f.balanceDate) m.set(f.balanceDate, f.balance);
+    // Money transferred in from another fund existed before the transfer too: add it (market-adjusted)
+    // to earlier points, so the chart shows the family's money, not a jump on the transfer date.
+    const tr = Object.entries(f.transfers || {}).map(([y, amt]) => ({ date: `${y}-07-01`, amt }));
+    return (f._pts = [...m.entries()].map(([date, balance]) => ({
+      date, balance: balance + tr.filter((t) => date < t.date).reduce((a, t) => a + t.amt / growth(f.track, date, t.date), 0),
+    })).sort((a, b) => (a.date < b.date ? -1 : 1)));
+  };
+  const native = (f, d) => {
+    const pts = points(f);
+    if (!pts.length) return null;
+    if (f.startDate && d < f.startDate) return 0;
+    if (d <= pts[0].date) return pts[0].balance * growth(f.track, pts[0].date, d);
+    const last = pts[pts.length - 1];
+    if (d >= last.date) return last.balance * growth(f.track, last.date, d);
+    let k = 0; while (pts[k + 1].date <= d) k++;
+    const p0 = pts[k], p1 = pts[k + 1];
+    const e = p0.balance * growth(f.track, p0.date, d), e1 = p0.balance * growth(f.track, p0.date, p1.date);
+    const frac = (Date.parse(d) - Date.parse(p0.date)) / (Date.parse(p1.date) - Date.parse(p0.date));
+    return e + (p1.balance - e1) * frac;
+  };
+  // Investment return only (no deposits): reported yearly returns where known, market index otherwise.
+  const returnBetween = (f, from, to) => {
+    let r = 1;
+    for (let Y = +from.slice(0, 4); Y <= +to.slice(0, 4); Y++) {
+      const ys = `${Y - 1}-12-31`, ye = `${Y}-12-31`;
+      const a = from > ys ? from : ys, b = to < ye ? to : ye;
+      if (a >= b) continue;
+      const rep = f.annualReturns && f.annualReturns[Y];
+      if (rep != null && a === ys && b === ye) r *= 1 + rep / 100;
+      else if (f.ytdReported != null && f.balanceDate && +f.balanceDate.slice(0, 4) === Y && a === ys && b >= f.balanceDate) r *= (1 + f.ytdReported / 100) * growth(f.track, f.balanceDate, b);
+      else r *= growth(f.track, a, b);
+    }
+    return r;
+  };
   const ils = (f, d) => { const n = native(f, d); return n == null ? null : n * fx(f.cur, d); };
-  return { fx, native, ils };
+  return { fx, native, ils, growth, returnBetween };
 }
 
 const HEB_MONTHS = ['ינו׳', 'פבר׳', 'מרץ', 'אפר׳', 'מאי', 'יוני', 'יולי', 'אוג׳', 'ספט׳', 'אוק׳', 'נוב׳', 'דצמ׳'];
@@ -104,7 +143,7 @@ export function computePayload(state, market, today) {
     const funds = p.funds.map((f) => {
       const now = model.ils(f, today);
       const mAgo = model.ils(f, monthAgo);
-      const y3 = model.ils(f, threeY);
+      const r3 = now != null ? model.returnBetween(f, threeY, today) : null;
       // YTD: if the report gave this year's return, start from it and estimate only the time since the report.
       const y0 = f.ytdReported != null && f.balanceDate && f.balanceDate.slice(0, 4) === today.slice(0, 4)
         ? model.ils(f, f.balanceDate) / (1 + f.ytdReported / 100)
@@ -142,7 +181,12 @@ export function computePayload(state, market, today) {
         reported: f.balance == null ? null : { amount: f.balance, cur: f.cur, date: f.balanceDate },
         value: now, mPct: pct(now, mAgo), mAmt: now != null ? now - mAgo : null,
         yPct: pct(now, y0), yAmt: now != null ? now - y0 : null,
-        y3Pct: pct(now, y3), y3Amt: now != null && y3 != null ? now - y3 : null,
+        y3Pct: r3 != null ? (r3 - 1) * 100 : null, y3Amt: r3 != null ? now - now / r3 : null,
+        realSince: (f.history || []).length ? f.history.map((h) => h.date).sort()[0] : null,
+        y3Real: !!(f.annualReturns && Object.keys(f.annualReturns).length),
+        years: (f.history || []).length ? [...(f.history || []).map((h) => ({ year: h.date.slice(0, 4), date: h.date, balance: h.balance })), ...(f.balance != null ? [{ year: f.balanceDate.slice(0, 4), date: f.balanceDate, balance: f.balance, partial: true }] : [])]
+          .sort((a, b) => (a.date < b.date ? -1 : 1))
+          .map((r) => ({ ...r, deposits: f.yearlyDeposits ? f.yearlyDeposits[r.year] ?? null : null, transfer: f.transfers ? f.transfers[r.year] ?? null : null, ret: r.partial ? f.ytdReported ?? null : (f.annualReturns ? f.annualReturns[r.year] ?? null : null) })) : null,
         depositFee: f.depositFee ?? '?', accFee: f.accFee, accFeeApprox: !!f.accFeeApprox, feeYear: accCost, pension,
         pensionNative: f.pensionCur && f.pensionWith != null ? { amount: f.pensionWith, cur: f.pensionCur } : null,
         liquidity: f.liquidity || '—',

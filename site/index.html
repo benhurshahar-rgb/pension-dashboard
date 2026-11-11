@@ -110,6 +110,9 @@ h3{margin:0;font-size:19px;font-weight:800}
 .sortbtn{font:inherit;font-size:13px;font-weight:800;color:var(--ink);background:#fff;border:1px solid #DDD6FE;border-radius:8px;padding:4px 8px;cursor:pointer;justify-self:start}
 .mini{height:6px;background:#F1EEFB;border-radius:3px;overflow:hidden;width:100%}
 .mini div{height:6px;border-radius:3px}
+.hist{background:#FAF8FF;border-bottom:1px solid var(--line);padding:12px 20px 16px;display:flex;flex-direction:column;gap:6px}
+.hrow{display:grid;grid-template-columns:110px 130px 1fr 220px 110px 130px;gap:12px;align-items:center;font-size:14px}
+.hh{font-size:12px;font-weight:700;color:var(--muted)}
 </style>
 </head>
 <body>
@@ -360,7 +363,7 @@ function wireInfo(root) {
 }
 
 // ---------- shared UI state ----------
-const UI = { sortCat: {}, feeSort: 'desc', feeWho: 'all', gWho: 'all', range: '1y', from: null, to: null };
+const UI = { openHist: {}, sortCat: {}, feeSort: 'desc', feeWho: 'all', gWho: 'all', range: '1y', from: null, to: null };
 const addD = (s, n) => new Date(Date.parse(s + 'T00:00:00Z') + n * 864e5).toISOString().slice(0, 10);
 const shortMoney = (v) => v >= 1e6 ? '₪' + (v / 1e6).toFixed(2).replace(/\.?0+$/, '') + 'M' : '₪' + Math.round(v / 1e3) + 'K';
 const ownerPill = (pid, name) => `<span class="owner" style="background:${HEAD[pid]};color:${pid === 'l' ? '#831843' : '#312E81'}">${esc(name)}</span>`;
@@ -436,6 +439,23 @@ function renderGrowth() {
   plot.addEventListener('mouseleave', () => { cur.hidden = dot.hidden = tip.hidden = true; });
 }
 
+// ---------- year-by-year history from annual reports ----------
+function histTable(f) {
+  const rows = f.years;
+  const max = Math.max(...rows.map((r) => r.balance));
+  const sym = { ILS: '₪', USD: '$', EUR: '€' }[f.cur] || '';
+  const m = (v) => v == null ? '—' : sym + Math.round(v).toLocaleString('en-US');
+  return `<div class="hist">
+    <div class="hrow hh"><span>שנה</span><span>יתרה בסוף השנה</span><span></span><span>הופקד בשנה</span><span>תשואת הקופה</span><span>רווח מהשקעה ≈</span></div>
+    ${rows.map((r, i) => { const prev = i ? rows[i - 1].balance : null; const gain = prev != null ? r.balance - prev - (r.deposits || 0) - (r.transfer || 0) : null; return `
+    <div class="hrow"><b>${r.partial ? 'עד ' + dt(r.date) : r.year}</b><b>${m(r.balance)}</b><div class="mini" style="height:10px"><div style="height:10px;width:${(r.balance / max * 100).toFixed(1)}%;background:${f.color}"></div></div>
+      <span>${m(r.deposits)}${r.transfer ? `<span class="small"> + ${m(r.transfer)} הועבר מקופה אחרת</span>` : ''}</span>
+      <span class="pill" style="justify-self:start;color:${col(r.ret)};background:${bg(r.ret)}">${r.ret == null ? '—' : (r.partial ? '≈ ' : '') + pct(r.ret, 2)}</span>
+      <span style="color:${col(gain)};font-weight:600">${gain == null ? '—' : sIls(gain).replace('₪', sym)}</span></div>`; }).join('')}
+    <span class="small">מקור: הדוחות השנתיים של הקופה. "רווח מהשקעה" = השינוי ביתרה פחות ההפקדות, ולכן כולל גם ניכוי דמי ניהול ועלות ביטוחים.</span>
+  </div>`;
+}
+
 // ---------- comparison by fund type ----------
 function renderCompare() {
   const all = DATA.people.flatMap((p) => p.funds.map((f) => ({ ...f, pid: p.id, pname: p.name })));
@@ -450,23 +470,24 @@ function renderCompare() {
       <div class="row"><div style="display:flex;align-items:center;gap:8px"><h3>${esc(g.name)}</h3>${infoBtn(g.key)}</div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">${g.s ? `${ownerPill('s', 'שחר')}<b>${ils(g.s)}</b>` : ''}${g.l ? `<span style="width:8px"></span>${ownerPill('l', 'לוטם')}<b>${ils(g.l)}</b>` : ''}<span class="small" style="margin-inline-start:8px">סה״כ ${ils(g.total)}</span></div></div>
       <div class="tablebox"><div class="t">
-        <div class="tr th"><span>של מי</span><span>קופה</span><button type="button" class="sortbtn" data-sort="${g.key}" aria-label="מיון הטבלה לפי שווי">שווי היום ${(UI.sortCat[g.key] || 'desc') === 'desc' ? '↓' : '↑'}</button><span>30 יום</span><span>מתחילת השנה</span><span>3 שנים ≈</span><span>דמי ניהול (הפקדה · צבירה)</span><span>עלות לשנה</span><span>קצבה צפויה</span><span>מתי אפשר למשוך</span></div>
+        <div class="tr th"><span>של מי</span><span>קופה</span><button type="button" class="sortbtn" data-sort="${g.key}" aria-label="מיון הטבלה לפי שווי">שווי היום ${(UI.sortCat[g.key] || 'desc') === 'desc' ? '↓' : '↑'}</button><span>30 יום</span><span>מתחילת השנה</span><span>3 שנים</span><span>דמי ניהול (הפקדה · צבירה)</span><span>עלות לשנה</span><span>קצבה צפויה</span><span>מתי אפשר למשוך</span></div>
         ${g.rows.map((f) => `
         <div class="tr">
           <span>${ownerPill(f.pid, f.pname)}</span>
           <div class="cell"><div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap"><span class="sq" style="background:${f.color}"></span><span style="font-weight:700">${esc(f.kind)}</span>${f.inactive ? '<span class="tag" style="background:#F1EEFB;color:#4C4677">לא פעיל</span>' : ''}</div>
-            <span class="small">${f.url ? `<a href="${esc(f.url)}" target="_blank" rel="noopener">${esc(f.provider)} ↗</a>` : esc(f.provider)}</span>${f.note ? `<span class="tag" style="background:#FFEDD5;color:#9A3412">${esc(f.note)}</span>` : ''}</div>
+            <span class="small">${f.url ? `<a href="${esc(f.url)}" target="_blank" rel="noopener">${esc(f.provider)} ↗</a>` : esc(f.provider)}</span>${f.note ? `<span class="tag" style="background:#FFEDD5;color:#9A3412">${esc(f.note)}</span>` : ''}${f.years ? `<button type="button" class="btn-sm" data-hist="${esc(f.id)}" aria-expanded="${!!UI.openHist[f.id]}">היסטוריה לפי שנים ${UI.openHist[f.id] ? '▲' : '▼'}</button>` : ''}</div>
           <div class="cell"><span style="font-weight:700">${f.value == null ? 'אין נתון' : ils(f.value)}</span>${f.reported ? `<span class="small">${nat(f.reported.amount, f.reported.cur)} · עודכן ${monY(f.reported.date)}</span>` : ''}${isStale(f) ? '<span class="tag" style="background:#FFEDD5;color:#9A3412">הגיע הזמן לעדכן</span>' : ''}<button type="button" class="btn-sm" data-upd="${esc(f.id)}">עדכן יתרה</button></div>
-          ${['m', 'y', 'y3'].map((k) => `<div class="cell"><span class="pill" style="color:${col(f[k + 'Pct'])};background:${bg(f[k + 'Pct'])}">${pct(f[k + 'Pct'])}</span><span class="small" style="color:${col(f[k + 'Pct'])};font-weight:600">${sIls(f[k + 'Amt'])}</span></div>`).join('')}
+          ${['m', 'y', 'y3'].map((k) => `<div class="cell"><span class="pill" style="color:${col(f[k + 'Pct'])};background:${bg(f[k + 'Pct'])}">${k === 'y3' && !f.y3Real ? '≈ ' : ''}${pct(f[k + 'Pct'])}</span><span class="small" style="color:${col(f[k + 'Pct'])};font-weight:600">${sIls(f[k + 'Amt'])}</span></div>`).join('')}
           <span>${esc(f.depositFee)} · ${f.accFee == null ? '?' : (f.accFeeApprox ? '≈' : '') + f.accFee.toFixed(2) + '%'}</span>
           <span>${ils(f.feeYear)}</span>
           <div class="cell"><span>${ils(f.pension)}</span>${f.pensionNative ? `<span class="small">${nat(f.pensionNative.amount, f.pensionNative.cur)} לחודש</span>` : ''}</div>
           <div class="cell"><span style="font-weight:600">${esc(f.liquidity)}</span>${f.liquidityNote ? `<span class="tag" style="background:#D1FAE5;color:#065F46">${esc(f.liquidityNote)}</span>` : ''}</div>
-        </div>`).join('')}
+        </div>${f.years && UI.openHist[f.id] ? histTable(f) : ''}`).join('')}
       </div></div>
     </div>`).join('');
   $('#compareBody').querySelectorAll('[data-sort]').forEach((b) => b.addEventListener('click', () => { const k = b.dataset.sort; UI.sortCat[k] = (UI.sortCat[k] || 'desc') === 'desc' ? 'asc' : 'desc'; renderCompare(); }));
   wireInfo($('#compareBody'));
+  $('#compareBody').querySelectorAll('[data-hist]').forEach((b) => b.addEventListener('click', () => { UI.openHist[b.dataset.hist] = !UI.openHist[b.dataset.hist]; renderCompare(); }));
   $('#compareBody').querySelectorAll('[data-upd]').forEach((b) => b.addEventListener('click', () => openUpdate(b.dataset.upd)));
 }
 
@@ -573,7 +594,7 @@ function show(D) {
       </div>
     </div>
     <div id="growthBody"></div>
-    <p class="note">הגרף הוא הערכה: השווי של הקופות שיש לכם היום, לפי תנועות השוק במסלול של כל קופה ביחס ליתרה האחרונה שדווחה. הוא לא כולל הפקדות ומשיכות שהיו בדרך, ולכן מראה כמה התשואה הוסיפה או הורידה – לא כמה כסף היה בפועל בחשבון בכל תאריך.</p>
+    <p class="note" id="growthNote"></p>
   </section>
 
   <section style="display:flex;flex-direction:column;gap:14px" aria-label="השוואה לפי סוג קופה">
@@ -624,6 +645,8 @@ function show(D) {
   segWire('range', (v) => { UI.range = v; $('#customDates').hidden = v !== 'custom'; if (v === 'custom') { UI.from = $('#gFrom').value; UI.to = $('#gTo').value; } renderGrowth(); });
   segWire('fee', (v) => { UI.feeWho = v; renderFees(); });
   $('#gApply').addEventListener('click', () => { UI.from = $('#gFrom').value; UI.to = $('#gTo').value; if (UI.from > UI.to) [UI.from, UI.to] = [UI.to, UI.from]; renderGrowth(); });
+  const realF = D.people.flatMap((p) => p.funds.filter((f) => f.realSince).map((f) => `${p.name} – ${f.kind} ${f.provider.split(' – ')[0]} (מ־${f.realSince.slice(0, 4)})`));
+  $('#growthNote').textContent = (realF.length ? `נתוני אמת מהדוחות השנתיים (כולל הפקדות): ${realF.join(' · ')}. ` : '') + 'בשאר הקופות, ובתקופה שלפני הדוח הראשון, הגרף הוא הערכה: השווי של היום לפי תנועות השוק במסלול של כל קופה, בלי הפקדות. ככל שתעלו עוד דוחות שנתיים – הגרף יהיה מדויק יותר.';
   renderGrowth(); renderCompare(); renderFees();
   $('#logout').addEventListener('click', () => { try { localStorage.removeItem(STORE); } catch {} location.reload(); });
 }
