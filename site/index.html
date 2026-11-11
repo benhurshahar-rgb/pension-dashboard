@@ -31,13 +31,22 @@ h2{margin:0;font-size:22px;font-weight:800}
 .legend{flex:1 1 220px;max-width:560px;min-width:0;display:flex;flex-direction:column;gap:4px}
 .legend button{display:flex;align-items:center;gap:8px;font:inherit;font-size:14px;color:var(--ink);border:0;border-radius:10px;padding:8px 10px;min-height:44px;text-align:right;cursor:pointer;background:transparent}
 .legend button.on{background:var(--line)}
+.legend .side{font-weight:700;display:flex;flex-direction:column;align-items:flex-start;white-space:nowrap}
+.sidel{font-size:11px;font-weight:600;color:var(--muted)}
+.info{position:relative;display:inline-flex}
+.qbtn{width:26px;height:26px;border-radius:50%;border:2px solid #C4B5FD;background:#fff;color:#4338CA;font:inherit;font-weight:800;font-size:14px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;padding:0}
+.qbtn:hover,.qbtn[aria-expanded=true]{background:#4338CA;color:#fff;border-color:#4338CA}
+.pop{position:absolute;top:32px;right:-8px;z-index:20;width:min(380px,86vw);background:#fff;color:var(--ink);border:1px solid #DDD6FE;border-radius:14px;padding:14px 16px;box-shadow:0 12px 32px rgba(26,20,70,.18);font-size:14px;line-height:1.55;font-weight:400}
+.pop b{display:block;margin-top:6px}.pop b:first-child{display:inline;margin:0}
+.pop .pg{color:#047857}.pop .pr{color:#B91C1C}
+.pop ul{margin:2px 0 0;padding-inline-start:18px}
 .legend .lab{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:2px}
 .legend .det{font-size:13px;color:var(--muted)}
 .note{font-size:13px;color:var(--muted);margin:0}
 .chip{font-weight:700;font-size:14px;padding:6px 12px;border-radius:999px}
 .tablebox{overflow-x:auto;background:#fff;border-radius:20px}
 .t{min-width:1220px}
-.tr.ft{grid-template-columns:1.8fr 0.9fr 1.6fr 1.3fr 1.3fr 1.3fr 1fr}
+.tr.ft{grid-template-columns:1.7fr 0.9fr 1.6fr 0.9fr 0.9fr 1.3fr 1.3fr 1fr}
 .tr{display:grid;grid-template-columns:0.7fr 2fr 1.4fr 1fr 1fr 1fr 1.2fr 0.9fr 1fr 1.2fr;gap:12px;padding:14px 20px;border-bottom:1px solid var(--line);align-items:center;font-size:15px}
 .th{font-size:13px;font-weight:700}
 .cell{display:flex;flex-direction:column;gap:3px;min-width:0;align-items:flex-start}
@@ -292,22 +301,29 @@ function donutHtml(id, aria, items, center) {
     }
     cum += len;
   });
-  const legend = items.map((it, i) => `<button type="button" data-i="${i}"><span class="sq" style="background:${it.color}"></span><span class="lab"><span style="font-weight:600">${esc(it.label)}</span>${it.detail ? `<span class="det">${esc(it.detail)}</span>` : ''}</span><span style="font-weight:700;color:${it.sideColor || '#1A1446'}">${esc(it.side)}</span></button>`).join('');
+  const legend = items.map((it, i) => `<button type="button" data-i="${i}"><span class="sq" style="background:${it.color}"></span><span class="lab"><span style="font-weight:600">${esc(it.label)}</span>${it.detail ? `<span class="det">${esc(it.detail)}</span>` : ''}</span><span class="side" style="color:${it.sideColor || '#1A1446'}">${it.side}</span></button>`).join('');
   return `<div class="donut" id="${id}">
     <svg viewBox="0 0 200 200" role="img" aria-label="${esc(aria)}">
       <circle cx="100" cy="100" r="76" fill="none" stroke="#F1EEFB" stroke-width="26"></circle>
       <g transform="rotate(-90 100 100)">${circles.join('')}</g>
       ${labels.join('')}
-      <text pointer-events="none" x="100" y="82" text-anchor="middle" font-size="11" font-weight="600" fill="#4C4677">${esc(center.l1 || '')}</text>
-      <text pointer-events="none" x="100" y="106" text-anchor="middle" font-size="20" font-weight="800" fill="#1A1446">${esc(center.l2 || '')}</text>
-      <text pointer-events="none" x="100" y="126" text-anchor="middle" font-size="12" font-weight="700" fill="${center.l3c || '#4C4677'}">${esc(center.l3 || '')}</text>
-      <text pointer-events="none" x="100" y="141" text-anchor="middle" font-size="10" fill="#4C4677">${esc(center.l4 || '')}</text>
+      <text class="c1" pointer-events="none" x="100" y="82" text-anchor="middle" font-size="10.5" font-weight="600" fill="#4C4677"></text>
+      <text class="c2" pointer-events="none" x="100" y="106" text-anchor="middle" font-size="20" font-weight="800" fill="#1A1446"></text>
+      <text class="c3" pointer-events="none" x="100" y="125" text-anchor="middle" font-size="11.5" font-weight="700"></text>
+      <text class="c4" pointer-events="none" x="100" y="140" text-anchor="middle" font-size="10" fill="#4C4677"></text>
     </svg>
     <div class="legend">${legend}</div></div>`;
 }
-function wireDonut(id) {
+// center: { idle(sum) → lines when nothing is hovered, hover(item, sum) → lines for one slice }
+function wireDonut(id, items, center) {
   const root = document.getElementById(id);
+  const sum = items.reduce((a, it) => a + it.v, 0);
   const set = (i) => {
+    const c = i == null ? center.idle(sum) : center.hover(items[i], sum);
+    root.querySelector('.c1').textContent = c.l1 || '';
+    root.querySelector('.c2').textContent = c.l2 || '';
+    const t3 = root.querySelector('.c3'); t3.textContent = c.l3 || ''; t3.setAttribute('fill', c.l3c || '#4C4677');
+    root.querySelector('.c4').textContent = c.l4 || '';
     root.querySelectorAll('circle[data-i]').forEach((el) => {
       const on = i == null || +el.dataset.i === i;
       el.setAttribute('stroke-width', i != null && on ? 34 : 26); el.style.opacity = on ? 1 : 0.35;
@@ -318,11 +334,33 @@ function wireDonut(id) {
     const i = +el.dataset.i;
     el.addEventListener('mouseenter', () => set(i)); el.addEventListener('mouseleave', () => set(null));
     el.addEventListener('focus', () => set(i)); el.addEventListener('blur', () => set(null));
+    el.addEventListener('click', () => set(i));
+  });
+  set(null);
+}
+
+// ---------- plain-language explanations per fund type ----------
+const EXPLAIN = {
+  pension: { what: 'חיסכון לפרישה שאתם והמעסיק מפקידים אליו כל חודש. בגיל פרישה הוא הופך לקצבה חודשית לכל החיים.', pros: ['דמי ניהול נמוכים יחסית', 'כולל ביטוח נכות וביטוח לשאירים (בן/בת זוג וילדים) במחיר זול', 'הטבות מס על ההפקדות'], cons: ['הכסף נעול עד גיל הפרישה – משיכה מוקדמת חייבת ב־35% מס ופוגעת בביטוחים', 'גובה הקצבה תלוי גם בתוחלת החיים ובמצב הקרן (איזון אקטוארי)'] },
+  bm: { what: 'פוליסת חיסכון לפרישה של חברת ביטוח, שאפשר לצרף אליה ביטוח חיים וביטוח אובדן כושר עבודה.', pros: ['בפוליסות שנפתחו לפני 2013 יכול להיות "מקדם קצבה מובטח" – כלומר קצבה גבוהה יותר ממה שמקבלים היום', 'גמישות בבחירת הכיסויים הביטוחיים'], cons: ['בדרך כלל דמי ניהול גבוהים יותר מקרן פנסיה', 'הביטוחים בפוליסה יקרים יותר מאשר בקרן פנסיה', 'לפני שמעבירים או סוגרים – לבדוק אם יש מקדם מובטח, כי הוא הולך לאיבוד'] },
+  hish: { what: 'חיסכון לטווח בינוני. הכסף נזיל אחרי 6 שנים מההפקדה הראשונה (או 3 שנים לצורך השתלמות), ועד תקרה מסוימת – פטור ממס על הרווחים.', pros: ['אחת מהטבות המס הטובות שיש: בלי מס רווחי הון', 'אחרי 6 שנים הכסף זמין, ואפשר גם להשאיר אותו ולהמשיך ליהנות מהפטור', 'אפשר לבחור מסלול השקעה ולעבור בחינם'], cons: ['נעול 6 שנים', 'הפטור ממס רק על הפקדות עד התקרה'] },
+  gemel: { what: 'חיסכון לפרישה בלי ביטוח. בקופות ישנות (כמו שלכם) הכסף כבר ניתן למשיכה כסכום חד־פעמי.', pros: ['הכסף שלכם זמין עכשיו', 'אפשר לעבור לקופה זולה יותר בלי לאבד ותק'], cons: ['אין בה ביטוח נכות או שאירים', 'אצלכם דמי הניהול בתקרה החוקית (1.05%) – יקר', 'לפני משיכה כדאי לבדוק את המס'] },
+  k401: { what: 'חיסכון פנסיוני אמריקאי דרך המעסיק. הכסף מושקע בקרן Vanguard שמתאימה את עצמה לשנת הפרישה (יותר מניות עכשיו, יותר אג״ח לקראת הפרישה).', pros: ['דמי ניהול נמוכים מאוד (כ־0.05%)', 'הכסף גדל בלי מס עד שמושכים', 'השקעה מפוזרת בכל העולם'], cons: ['משיכה לפני גיל 59.5 – קנס 10% ועוד מס', 'המיסוי למי שגר בישראל מורכב (אמנת המס בין ישראל לארה״ב) – לבדוק עם רו״ח לפני משיכה', 'הערך תלוי בשער הדולר'] },
+  ireland: { what: 'תוכנית פנסיה תעסוקתית אירית (DC) דרך המעסיק. אין הפקדות חדשות – הכסף ממשיך להיות מושקע בקרן שבחרתם.', pros: ['דמי ניהול נמוכים בתוכנית שלכם (0.22%)', 'בפרישה אפשר לקחת עד 25% סכום חד־פעמי, פטור ממס באירלנד (עד €200,000)', 'מעבר בין קרנות בחינם (Switch Funds)'], cons: ['נעולה עד גיל 50 (פרישה מוקדמת) או 66', 'מיסוי למי שגר בישראל – לבדוק את אמנת המס לפני משיכה', 'הערך תלוי בשער היורו'] },
+};
+const infoBtn = (key) => EXPLAIN[key] ? `<span class="info"><button type="button" class="qbtn" aria-label="מה זה?" aria-expanded="false" data-info="${key}">?</button><span class="pop" role="tooltip" hidden><b>מה זה?</b> ${esc(EXPLAIN[key].what)}<b class="pg">יתרונות</b><ul>${EXPLAIN[key].pros.map((x) => `<li>${esc(x)}</li>`).join('')}</ul><b class="pr">חסרונות</b><ul>${EXPLAIN[key].cons.map((x) => `<li>${esc(x)}</li>`).join('')}</ul></span></span>` : '';
+function wireInfo(root) {
+  root.querySelectorAll('.info').forEach((w) => {
+    const btn = w.querySelector('.qbtn'), pop = w.querySelector('.pop');
+    const open = (v) => { pop.hidden = !v; btn.setAttribute('aria-expanded', v); };
+    w.addEventListener('mouseenter', () => open(true)); w.addEventListener('mouseleave', () => open(false));
+    btn.addEventListener('click', (e) => { e.stopPropagation(); open(pop.hidden); });
+    btn.addEventListener('blur', () => open(false));
   });
 }
 
 // ---------- shared UI state ----------
-const UI = { sort: 'desc', feeWho: 'all', gWho: 'all', range: '1y', from: null, to: null };
+const UI = { sortCat: {}, feeSort: 'desc', feeWho: 'all', gWho: 'all', range: '1y', from: null, to: null };
 const addD = (s, n) => new Date(Date.parse(s + 'T00:00:00Z') + n * 864e5).toISOString().slice(0, 10);
 const shortMoney = (v) => v >= 1e6 ? '₪' + (v / 1e6).toFixed(2).replace(/\.?0+$/, '') + 'M' : '₪' + Math.round(v / 1e3) + 'K';
 const ownerPill = (pid, name) => `<span class="owner" style="background:${HEAD[pid]};color:${pid === 'l' ? '#831843' : '#312E81'}">${esc(name)}</span>`;
@@ -401,20 +439,18 @@ function renderGrowth() {
 // ---------- comparison by fund type ----------
 function renderCompare() {
   const all = DATA.people.flatMap((p) => p.funds.map((f) => ({ ...f, pid: p.id, pname: p.name })));
-  const dir = UI.sort === 'desc' ? -1 : 1;
-  const byVal = (a, b) => (a.value == null) - (b.value == null) || dir * ((a.value || 0) - (b.value || 0));
   const groups = DATA.categories.map(([key, name]) => {
-    const rows = all.filter((f) => f.category === key).sort(byVal);
+    const dir = (UI.sortCat[key] || 'desc') === 'desc' ? -1 : 1;
+    const rows = all.filter((f) => f.category === key).sort((a, b) => (a.value == null) - (b.value == null) || dir * ((a.value || 0) - (b.value || 0)));
     const tot = (pid) => rows.filter((r) => r.pid === pid).reduce((a, r) => a + (r.value || 0), 0);
     return { key, name, rows, total: rows.reduce((a, r) => a + (r.value || 0), 0), s: tot('s'), l: tot('l') };
-  }).filter((g) => g.rows.length).sort((a, b) => dir * (a.total - b.total));
-  const arrow = UI.sort === 'desc' ? '↓' : '↑';
+  }).filter((g) => g.rows.length);
   $('#compareBody').innerHTML = groups.map((g) => `
     <div class="cgroup">
-      <div class="row"><h3>${esc(g.name)}</h3>
+      <div class="row"><div style="display:flex;align-items:center;gap:8px"><h3>${esc(g.name)}</h3>${infoBtn(g.key)}</div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">${g.s ? `${ownerPill('s', 'שחר')}<b>${ils(g.s)}</b>` : ''}${g.l ? `<span style="width:8px"></span>${ownerPill('l', 'לוטם')}<b>${ils(g.l)}</b>` : ''}<span class="small" style="margin-inline-start:8px">סה״כ ${ils(g.total)}</span></div></div>
       <div class="tablebox"><div class="t">
-        <div class="tr th"><span>של מי</span><span>קופה</span><button type="button" class="sortbtn" data-sort aria-label="מיון לפי שווי">שווי היום ${arrow}</button><span>30 יום</span><span>מתחילת השנה</span><span>3 שנים ≈</span><span>דמי ניהול (הפקדה · צבירה)</span><span>עלות לשנה</span><span>קצבה צפויה</span><span>מתי אפשר למשוך</span></div>
+        <div class="tr th"><span>של מי</span><span>קופה</span><button type="button" class="sortbtn" data-sort="${g.key}" aria-label="מיון הטבלה לפי שווי">שווי היום ${(UI.sortCat[g.key] || 'desc') === 'desc' ? '↓' : '↑'}</button><span>30 יום</span><span>מתחילת השנה</span><span>3 שנים ≈</span><span>דמי ניהול (הפקדה · צבירה)</span><span>עלות לשנה</span><span>קצבה צפויה</span><span>מתי אפשר למשוך</span></div>
         ${g.rows.map((f) => `
         <div class="tr">
           <span>${ownerPill(f.pid, f.pname)}</span>
@@ -429,15 +465,16 @@ function renderCompare() {
         </div>`).join('')}
       </div></div>
     </div>`).join('');
-  $('#compareBody').querySelectorAll('[data-sort]').forEach((b) => b.addEventListener('click', () => { UI.sort = UI.sort === 'desc' ? 'asc' : 'desc'; renderCompare(); syncSortBtn(); }));
+  $('#compareBody').querySelectorAll('[data-sort]').forEach((b) => b.addEventListener('click', () => { const k = b.dataset.sort; UI.sortCat[k] = (UI.sortCat[k] || 'desc') === 'desc' ? 'asc' : 'desc'; renderCompare(); }));
+  wireInfo($('#compareBody'));
   $('#compareBody').querySelectorAll('[data-upd]').forEach((b) => b.addEventListener('click', () => openUpdate(b.dataset.upd)));
 }
-function syncSortBtn() { const b = $('#sortTop'); if (b) b.textContent = UI.sort === 'desc' ? 'מהגדול לקטן ↓' : 'מהקטן לגדול ↑'; }
 
 // ---------- fees vs market ----------
 function renderFees() {
   const B = DATA.benchmarks;
-  const rows = DATA.fees.rows.filter((r) => UI.feeWho === 'all' || r.person === UI.feeWho);
+  const fdir = UI.feeSort === 'desc' ? -1 : 1;
+  const rows = DATA.fees.rows.filter((r) => UI.feeWho === 'all' || r.person === UI.feeWho).sort((a, b) => fdir * (a.cost - b.cost));
   const maxCost = Math.max(1, ...rows.map((r) => r.cost));
   const status = (r) => {
     if (r.acc == null) return ['אין נתון', '#F1EEFB', '#4C4677'];
@@ -451,14 +488,15 @@ function renderFees() {
       <div><span class="gl">סה״כ דמי ניהול לשנה</span><b>${ils(totCost)}</b></div>
       <div style="background:${totSave > 0 ? '#FFEDD5' : '#D1FAE5'};color:${totSave > 0 ? '#9A3412' : '#065F46'}"><span class="gl" style="color:inherit">אפשר לחסוך בשנה אם יורידו לממוצע</span><b>${ils(totSave)}</b></div>
     </div>
-    <div class="tablebox"><div class="t" style="min-width:1040px">
-      <div class="tr th ft"><span>קופה</span><span>שלכם מהצבירה</span><span>ממוצע בשוק</span><span>מההפקדה: שלכם / ממוצע</span><span>עלות לשנה</span><span>מצב</span><span>חיסכון אפשרי לשנה</span></div>
+    <div class="tablebox"><div class="t" style="min-width:1140px">
+      <div class="tr th ft"><span>קופה</span><span>מהצבירה – שלכם</span><span>מהצבירה – ממוצע בשוק</span><span>מההפקדה – שלכם</span><span>מההפקדה – ממוצע בשוק</span><button type="button" class="sortbtn" id="feeSort" aria-label="מיון לפי עלות לשנה">עלות לשנה ${UI.feeSort === 'desc' ? '↓' : '↑'}</button><span>מצב</span><span>חיסכון אפשרי לשנה</span></div>
       ${rows.map((r) => { const [st, sb, sc] = status(r); return `
       <div class="tr ft">
         <div class="cell"><div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">${ownerPill(r.person, r.personName)}<b>${esc(r.kind)}</b></div><span class="small">${esc(r.provider)}</span></div>
         <span style="font-weight:700">${r.acc == null ? '?' : (r.accApprox ? '≈' : '') + r.acc.toFixed(2) + '%'}</span>
         <div class="cell"><span>${r.accAvg == null ? '—' : r.accAvg.toFixed(2) + '%'}</span><span class="small">${esc(B[r.category] ? B[r.category].label : '')}</span></div>
-        <span>${r.active && r.dep != null ? `${r.dep.toFixed(2)}% / ${r.depAvg != null ? r.depAvg.toFixed(2) + '%' : '—'}` : '<span class="small">אין הפקדות</span>'}</span>
+        <span style="font-weight:700">${r.active && r.dep != null ? r.dep.toFixed(2) + '%' : '<span class="small" style="font-weight:400">אין הפקדות</span>'}</span>
+        <span>${r.depAvg != null ? r.depAvg.toFixed(2) + '%' : '—'}</span>
         <div class="cell" style="width:100%"><b>${ils(r.cost)}</b><div class="mini"><div style="width:${(r.cost / maxCost * 100).toFixed(1)}%;background:${ACCENT[r.person]}"></div></div></div>
         <span class="tag" style="background:${sb};color:${sc};align-self:center;justify-self:start">${st}</span>
         <span style="font-weight:700;color:${r.saving > 0 ? '#9A3412' : '#4C4677'}">${r.saving > 0 ? ils(r.saving) : '—'}</span>
@@ -469,6 +507,7 @@ function renderFees() {
       <span>${esc(B.pension.tip)}</span>
       <span>מקורות לממוצעים: ${Object.values(B).filter((b) => b.src).map((b) => b.srcUrl ? `<a href="${esc(b.srcUrl)}" target="_blank" rel="noopener">${esc(b.src)}</a>` : esc(b.src)).filter((v, i, a) => a.indexOf(v) === i).join(' · ')}</span>
     </div>`;
+  $('#feeSort').addEventListener('click', () => { UI.feeSort = UI.feeSort === 'desc' ? 'asc' : 'desc'; renderFees(); });
 }
 
 // ---------- page ----------
@@ -506,14 +545,19 @@ function show(D) {
       <p class="note">תזכורת קופצת כשנתון ישן מ־3 חודשים (חו״ל) או 4 חודשים (ישראל).</p></section>`;
   }
 
+  const yr = D.today.slice(0, 4);
   const personItems = (p) => p.funds.filter((f) => f.value).sort((a, b) => b.value - a.value).map((f) => ({
-    label: `${f.kind} · ${f.provider}`, v: f.value, color: f.color, side: pct(f.yPct, 1), sideColor: col(f.yPct),
+    label: `${f.kind} · ${f.provider}`, v: f.value, y: f.yPct, yAmt: f.yAmt, color: f.color,
+    side: `${pct(f.yPct, 1)}<span class="sidel">מתחילת ${yr}</span>`, sideColor: col(f.yPct),
   }));
   html += `<section class="donuts">` + D.people.map((p) => `
     <div class="card">
-      <div style="display:flex;align-items:center;gap:10px"><span class="dot" style="background:${ACCENT[p.id]}"></span><h2>${esc(p.name)}</h2></div>
-      ${donutHtml('d-' + p.id, 'פילוח הצבירה של ' + p.name, personItems(p), { l1: 'סה״כ ' + p.name, l2: ils(p.total), l3: sIls(p.ytd), l3c: col(p.ytd), l4: 'רווח מתחילת השנה' })}
-      <p class="note">האחוז בתוך העיגול = החלק של הקופה מהסך הכל. האחוז ליד כל קופה ברשימה = תשואה מתחילת השנה.</p>
+      <div style="display:flex;flex-direction:column;gap:4px">
+        <div style="display:flex;align-items:center;gap:10px"><span class="dot" style="background:${ACCENT[p.id]}"></span><h2>${esc(p.name)}</h2></div>
+        <div style="display:flex;align-items:baseline;gap:12px;flex-wrap:wrap"><span style="font-size:30px;font-weight:800">${ils(p.total)}</span><span class="pill" style="color:${col(p.ytd)};background:${bg(p.ytd)}">${sIls(p.ytd)} · ${pct(p.ytd / (p.total - p.ytd) * 100, 1)} מתחילת ${yr}</span></div>
+      </div>
+      ${donutHtml('d-' + p.id, 'פילוח הצבירה של ' + p.name, personItems(p))}
+      <p class="note">בתוך העיגול: החלק של כל קופה מהסך הכל. ברשימה: כמה כל קופה עלתה (▲) או ירדה (▼) מ־1 בינואר ${yr} ועד היום.</p>
     </div>`).join('') + `</section>`;
 
   html += `
@@ -533,8 +577,7 @@ function show(D) {
   </section>
 
   <section style="display:flex;flex-direction:column;gap:14px" aria-label="השוואה לפי סוג קופה">
-    <div class="row"><h2 style="font-size:24px">השוואה לפי סוג קופה</h2>
-      <button type="button" class="btn-sm" id="sortTop" aria-label="שנה סדר מיון"></button></div>
+    <div class="row"><h2 style="font-size:24px">השוואה לפי סוג קופה</h2><span class="small">לחצו על "שווי היום ↓" בכל טבלה כדי למיין אותה · על ה־? כדי להבין מה זה</span></div>
     <div id="compareBody" style="display:flex;flex-direction:column;gap:22px"></div>
     <p class="note">${esc(S.footnote)}</p><p class="note">${esc(L.footnote)}</p>
     <p class="note">"3 שנים ≈" = הערכה לפי מדד המסלול של כל קופה (בלי הפקדות). 30 יום ומתחילת השנה מבוססים על הדוח האחרון של הקופה ועל תנועות השוק מאז.</p>
@@ -555,7 +598,7 @@ function show(D) {
   <section class="card" style="gap:18px">
     <div class="row"><h2>כמה משלמים על ביטוחים</h2>
       <div style="display:flex;gap:10px;flex-wrap:wrap"><span class="chip" style="background:#241A5C;color:#fff;font-size:18px;border-radius:12px">${m2(insTotal)} לחודש</span><span class="chip" style="background:#FDE68A;color:#5B3B00;font-size:18px;border-radius:12px">${m2(Math.round(insTotal * 12))} לשנה</span></div></div>
-    ${donutHtml('d-ins', 'פילוח תשלומי הביטוח לפי סוג', insItems, { l1: 'סה״כ לחודש', l2: m2(insTotal), l3: m2(Math.round(insTotal * 12)) + ' לשנה' })}
+    ${donutHtml('d-ins', 'פילוח תשלומי הביטוח לפי סוג', insItems)}
     <div style="display:flex;flex-wrap:wrap;gap:10px;font-size:14px"><span style="font-weight:600;color:#4C4677">אתרי החברות:</span>${companies.map(([c, u]) => `<a href="${esc(u)}" target="_blank" rel="noopener">${esc(c)} ↗</a>`).join('')}</div>
   </section>
   <footer>
@@ -564,8 +607,14 @@ function show(D) {
   </footer>`;
 
   app.innerHTML = html;
-  for (const p of D.people) wireDonut('d-' + p.id);
-  wireDonut('d-ins');
+  for (const p of D.people) wireDonut('d-' + p.id, personItems(p), {
+    idle: () => ({ l1: 'העבירו עכבר', l2: 'על קופה', l4: 'או געו בה ברשימה' }),
+    hover: (it, sum) => ({ l1: it.label.length > 26 ? it.label.slice(0, 25) + '…' : it.label, l2: ils(it.v), l3: `${pct(it.y, 1)} מתחילת ${yr}`, l3c: col(it.y), l4: `${sIls(it.yAmt)} · ${Math.round(it.v / sum * 100)}% מהסך` }),
+  });
+  wireDonut('d-ins', insItems, {
+    idle: (sum) => ({ l1: 'סה״כ לחודש', l2: m2(sum), l3: m2(Math.round(sum * 12)) + ' לשנה' }),
+    hover: (it, sum) => ({ l1: it.label, l2: m2(it.v) + ' לחודש', l3: m2(Math.round(it.v * 12)) + ' לשנה', l4: Math.round(it.v / sum * 100) + '% מסך הביטוחים' }),
+  });
   app.querySelectorAll('.banner [data-upd]').forEach((b) => b.addEventListener('click', () => openUpdate(b.dataset.upd)));
   const segWire = (attr, fn) => app.querySelectorAll(`[data-${attr}]`).forEach((b) => b.addEventListener('click', () => {
     app.querySelectorAll(`[data-${attr}]`).forEach((x) => x.setAttribute('aria-pressed', x === b));
@@ -575,8 +624,6 @@ function show(D) {
   segWire('range', (v) => { UI.range = v; $('#customDates').hidden = v !== 'custom'; if (v === 'custom') { UI.from = $('#gFrom').value; UI.to = $('#gTo').value; } renderGrowth(); });
   segWire('fee', (v) => { UI.feeWho = v; renderFees(); });
   $('#gApply').addEventListener('click', () => { UI.from = $('#gFrom').value; UI.to = $('#gTo').value; if (UI.from > UI.to) [UI.from, UI.to] = [UI.to, UI.from]; renderGrowth(); });
-  $('#sortTop').addEventListener('click', () => { UI.sort = UI.sort === 'desc' ? 'asc' : 'desc'; renderCompare(); syncSortBtn(); });
-  syncSortBtn();
   renderGrowth(); renderCompare(); renderFees();
   $('#logout').addEventListener('click', () => { try { localStorage.removeItem(STORE); } catch {} location.reload(); });
 }
