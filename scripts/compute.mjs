@@ -214,6 +214,19 @@ export function computePayload(state, market, today) {
     return { id: p.id, name: p.name, total, ytd, m: mm, fxY: fxImpact, usd: usdNow, eur: eurNow, pensionWith: pW, pensionWithout: pWo, funds, footnote: p.footnote || '', depositsPaused: !!p.depositsPaused, resumeNote: p.resumeNote || '' };
   });
 
+  const cumDeposits = (f, d) => {
+    if (!f.yearlyDeposits || !(f.history || []).length) return 0;
+    let sum = 0;
+    for (const [y, amt] of Object.entries(f.yearlyDeposits)) {
+      if (!amt) continue;
+      const ys = Date.parse(`${+y - 1}-12-31`);
+      let ye = `${y}-12-31`;
+      if (f.balanceDate && f.balanceDate.slice(0, 4) === y && f.balanceDate < ye) ye = f.balanceDate;
+      const fr = Math.min(1, Math.max(0, (Date.parse(d) - ys) / (Date.parse(ye) - ys)));
+      sum += amt * fr;
+    }
+    return sum;
+  };
   // growth: every trading day in the last 5 years (+ today), per person, in ILS.
   const fiveY = addDays(today, -1830);
   const days = ((market?.series?.GSPC) || []).map((x) => x[0]).filter((d) => d >= fiveY && d < today);
@@ -225,6 +238,8 @@ export function computePayload(state, market, today) {
       values: days.map((d) => Math.round(p.funds.reduce((a, f) => a + (model.ils(f, d) || 0), 0))),
       usd: days.map((d) => Math.round(p.funds.reduce((a, f) => a + (model.ils(f, d) || 0) * model.exposure(f).USD, 0))),
       eur: days.map((d) => Math.round(p.funds.reduce((a, f) => a + (model.ils(f, d) || 0) * model.exposure(f).EUR, 0))),
+      // Cumulative deposits (from annual reports), spread evenly over each year up to the last real balance.
+      dep: days.map((d) => Math.round(p.funds.reduce((a, f) => a + cumDeposits(f, d) * model.fx(f.cur, d), 0))),
     })),
     fx: { USD: days.map((d) => +model.fx('USD', d).toFixed(4)), EUR: days.map((d) => +model.fx('EUR', d).toFixed(4)) },
   };

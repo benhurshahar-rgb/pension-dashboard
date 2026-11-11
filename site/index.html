@@ -408,13 +408,15 @@ function renderGrowth() {
   const area = `M${X(0)},${H} L${line.replace(/ /g, ' L')} L${X(n)},${H} Z`;
   const color = UI.gWho === 's' ? '#6366F1' : UI.gWho === 'l' ? '#EC4899' : '#7C3AED';
   const start = vals[0], end = vals[n], ch = end - start, chP = (end / start - 1) * 100;
+  const depOf = (id) => { const q = P(id).dep; return q ? q[idx[n]] - q[idx[0]] : 0; };
+  const depIn = UI.gWho === 'all' ? depOf('s') + depOf('l') : depOf(UI.gWho);
   const imax = vals.indexOf(Math.max(...vals)), imin = vals.indexOf(Math.min(...vals));
   const long = (new Date(ds[n]) - new Date(ds[0])) / 864e5 > 120;
   const tickIdx = [0, 0.25, 0.5, 0.75, 1].map((f) => Math.round(f * n));
   box.innerHTML = `
     <div class="gstats">
       <div><span class="gl">${dtl(ds[n])}</span><b>${ils(end)}</b></div>
-      <div style="background:${bg(ch)};color:${col(ch)}"><span class="gl" style="color:inherit">שינוי מאז ${dtl(ds[0])}</span><b>${sIls(ch)}</b><span style="font-weight:700">${pct(chP)}</span></div>
+      <div style="background:${bg(ch)};color:${col(ch)}"><span class="gl" style="color:inherit">שינוי מאז ${dtl(ds[0])} (כולל הפקדות)</span><b>${sIls(ch)}</b><span style="font-weight:700">${pct(chP)}</span>${depIn > 0 ? `<span class="gl" style="color:inherit">מזה הפקדות: ${ils(depIn)} · רווח: ${sIls(ch - depIn)}</span>` : ''}</div>
       <div><span class="gl">הכי גבוה</span><b>${ils(vals[imax])}</b><span class="gl">${dtl(ds[imax])}</span></div>
       <div><span class="gl">הכי נמוך</span><b>${ils(vals[imin])}</b><span class="gl">${dtl(ds[imin])}</span></div>
     </div>
