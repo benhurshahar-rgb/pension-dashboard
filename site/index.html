@@ -578,7 +578,7 @@ function show(D) {
     <div style="display:flex;flex-direction:column;gap:6px">
       <h1>החיסכון הפנסיוני של שחר ולוטם</h1>
       <span class="sub">עודכן: ${esc(updated)} · הכל בש״ח · $1 = ₪${D.fx.USD.toFixed(3)} · €1 = ₪${D.fx.EUR.toFixed(3)}</span>
-      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:4px">${fxSeg()}<span class="sub" style="font-size:13px">${UI.fx ? 'התשואות כוללות את השינוי בשער הדולר והאירו' : 'כל התשואות באתר מוצגות כאילו שער הדולר והאירו לא זז'}</span></div>
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:4px">${fxSeg()}<span class="sub" style="font-size:13px">${UI.fx ? 'התשואות כוללות את השינוי בשער הדולר והאירו – כלומר כמה ₪ יש לכם כרגע במציאות' : 'כמה ₪ היו לכם אילו שער הדולר והאירו לא היה זז מתחילת התקופה – למשל מ־1 בינואר ברווח מתחילת השנה, ומלפני שנה בגרף של שנה'}</span></div>
     </div>
     <div class="kpis">
       <div class="kpi" style="background:#fff;color:#1A1446"><span class="l" style="color:#4C4677">סה״כ צבירה משפחתית</span><span class="v">${ils(D.family.total)}</span><span class="s" style="color:${col(F.m)}">${pct(famMP)} ב־30 הימים האחרונים (${sIls(F.m)})</span></div>
