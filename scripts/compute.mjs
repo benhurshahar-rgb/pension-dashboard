@@ -75,9 +75,24 @@ function monthsUntil(ym, today) {
   return (y - t.getUTCFullYear()) * 12 + (m - 1 - t.getUTCMonth());
 }
 
+// Typical fees in the market, for the fee comparison. Public data – sources shown on the page.
+export const BENCHMARKS = {
+  pension: { acc: 0.144, dep: 1.54, label: 'ממוצע קרנות פנסיה חדשות', src: 'סופרמרקר, דיווחי הקרנות לרשות שוק ההון, אוגוסט 2026', srcUrl: 'https://www.supermarker.themarker.com/Calculators/Fees/ManagementFeesCalculator.aspx', tip: 'קרנות ברירת המחדל גובות 1% מההפקדה ו־0.22% מהצבירה – נקודת פתיחה טובה למו״מ.' },
+  bm: { acc: 0.77, dep: 1.84, label: 'חציון ביטוח מנהלים (פוליסות מ־2004)', src: 'סופרמרקר על נתוני ביטוח נט, יולי 2026', srcUrl: 'https://www.supermarker.themarker.com/MenahalimInsurance/MenahalimVsPensionFund.aspx', tip: '' },
+  hish: { acc: 0.6, dep: 0, label: 'טווח מקובל בקרנות השתלמות: 0.55%–0.63%', src: 'השוואת קרנות השתלמות, גמל נט 2026', srcUrl: 'https://www.supermarker.themarker.com/Gemel/CompareHishtalmutFunds.aspx', tip: '' },
+  gemel: { acc: 0.6, dep: 0, label: 'הערכה לקופות גמל; 1.05% היא התקרה החוקית', src: 'הערכה לפי קרנות השתלמות דומות', srcUrl: '', tip: '' },
+  k401: { acc: 0.05, dep: 0, label: 'Vanguard Target Retirement Trust: 0.045%–0.055%', src: 'Vanguard fact sheets, 2026', srcUrl: 'https://workplace.vanguard.com/assets/corp/fund_communications/pdf_publish/us-products/fact-sheet/F1681.pdf', tip: '' },
+  ireland: { acc: 0.8, dep: 0, label: 'ממוצע דמי ניהול בפנסיות באירלנד ~0.8%', src: 'Insurance Ireland, דרך Irish Times', srcUrl: 'https://www.irishtimes.com/business/2023/06/16/irish-pension-charges-good-value-at-08-says-insurance-ireland', tip: '' },
+};
+
+export const CATEGORIES = [
+  ['pension', 'קרן פנסיה'], ['bm', 'ביטוח מנהלים'], ['hish', 'קרן השתלמות'], ['gemel', 'קופת גמל'], ['k401', '401k בארה״ב'], ['ireland', 'פנסיה באירלנד'],
+];
+
 export function computePayload(state, market, today) {
   const model = makeModel(market, state.fallbackFx || { USD: 3.7, EUR: 4.0 });
   const monthAgo = addDays(today, -30);
+  const threeY = addDays(today, -1096);
   const yearStart = `${Number(today.slice(0, 4)) - 1}-12-31`;
   const pct = (a, b) => (a != null && b ? (a / b - 1) * 100 : null);
 
@@ -89,6 +104,7 @@ export function computePayload(state, market, today) {
     const funds = p.funds.map((f) => {
       const now = model.ils(f, today);
       const mAgo = model.ils(f, monthAgo);
+      const y3 = model.ils(f, threeY);
       // YTD: if the report gave this year's return, start from it and estimate only the time since the report.
       const y0 = f.ytdReported != null && f.balanceDate && f.balanceDate.slice(0, 4) === today.slice(0, 4)
         ? model.ils(f, f.balanceDate) / (1 + f.ytdReported / 100)
@@ -99,16 +115,35 @@ export function computePayload(state, market, today) {
       if (pension) pW += pension;
       if (pensionWo) pWo += pensionWo;
       if (now != null) { total += now; ytd += now - y0; mm += now - mAgo; }
-      const fee = f.accFee != null && now != null ? now * f.accFee / 100 : null;
-      if (fee) feeRows.push({ label: `${p.name} · ${f.kind} ${f.provider} (${f.accFee.toFixed(2)}%)`, v: fee, person: p.id });
+
+      const b = BENCHMARKS[f.category] || null;
+      const depNum = typeof f.depositFee === 'string' && /^[\d.]+%$/.test(f.depositFee) ? parseFloat(f.depositFee) : null;
+      const yearlyDeposits = f.monthlyDeposit ? f.monthlyDeposit * 12 : 0;
+      const accCost = f.accFee != null && now != null ? now * f.accFee / 100 : null;
+      const depCost = depNum != null && yearlyDeposits ? yearlyDeposits * depNum / 100 : null;
+      if (now != null) {
+        // Same rule as the page's status badge: only clearly above the market counts (10% + 0.01pt tolerance on savings fee, 0.05pt on deposit fee).
+        const accHigh = b && f.accFee != null && f.accFee > b.acc * 1.1 + 0.01;
+        const depHigh = b && depNum != null && yearlyDeposits && b.dep && depNum > b.dep + 0.05;
+        const accOver = accHigh ? (f.accFee - b.acc) / 100 * now : 0;
+        const depOver = depHigh ? (depNum - b.dep) / 100 * yearlyDeposits : 0;
+        feeRows.push({
+          id: f.id, person: p.id, personName: p.name, category: f.category, kind: f.kind, provider: f.provider,
+          acc: f.accFee, accApprox: !!f.accFeeApprox, accAvg: b ? b.acc : null,
+          dep: depNum, depAvg: b && b.dep ? b.dep : null, active: !f.inactive, yearlyDeposits,
+          cost: (accCost || 0) + (depCost || 0), accCost, depCost, saving: accOver + depOver, value: now,
+        });
+      }
+
       const mu = monthsUntil(f.liquidityDate, today);
       return {
-        id: f.id, kind: f.kind, provider: f.provider, url: f.url, cur: f.cur, inactive: !!f.inactive,
+        id: f.id, category: f.category, kind: f.kind, provider: f.provider, url: f.url, cur: f.cur, inactive: !!f.inactive,
         track: (TRACKS[f.track] || TRACKS.general).label,
         reported: f.balance == null ? null : { amount: f.balance, cur: f.cur, date: f.balanceDate },
         value: now, mPct: pct(now, mAgo), mAmt: now != null ? now - mAgo : null,
         yPct: pct(now, y0), yAmt: now != null ? now - y0 : null,
-        depositFee: f.depositFee ?? '?', accFee: f.accFee, feeYear: fee, pension,
+        y3Pct: pct(now, y3), y3Amt: now != null && y3 != null ? now - y3 : null,
+        depositFee: f.depositFee ?? '?', accFee: f.accFee, accFeeApprox: !!f.accFeeApprox, feeYear: accCost, pension,
         pensionNative: f.pensionCur && f.pensionWith != null ? { amount: f.pensionWith, cur: f.pensionCur } : null,
         liquidity: f.liquidity || '—',
         liquidityNote: mu == null ? null : mu <= 0 ? 'נזילה עכשיו' : mu <= 12 ? `נזילה בעוד ${mu} חודשים` : null,
@@ -119,23 +154,19 @@ export function computePayload(state, market, today) {
     return { id: p.id, name: p.name, total, ytd, m: mm, pensionWith: pW, pensionWithout: pWo, funds, footnote: p.footnote || '', depositsPaused: !!p.depositsPaused, resumeNote: p.resumeNote || '' };
   });
 
-  // growth: month-ends for the last 11 months + today
-  const points = [];
-  const t = new Date(today + 'T00:00:00Z');
-  for (let k = 11; k >= 1; k--) {
-    const d = new Date(Date.UTC(t.getUTCFullYear(), t.getUTCMonth() - k + 1, 0));
-    points.push({ date: iso(d), label: HEB_MONTHS[d.getUTCMonth()] });
-  }
-  points.push({ date: today, label: 'היום' });
+  // growth: every trading day in the last 5 years (+ today), per person, in ILS.
+  const fiveY = addDays(today, -1830);
+  const days = ((market?.series?.GSPC) || []).map((x) => x[0]).filter((d) => d >= fiveY && d < today);
+  days.push(today);
   const growth = {
-    labels: points.map((x) => x.label),
+    dates: days,
     people: state.people.map((p) => ({
       id: p.id, name: p.name,
-      values: points.map((x) => p.funds.reduce((a, f) => a + (model.ils(f, x.date) || 0), 0)),
+      values: days.map((d) => Math.round(p.funds.reduce((a, f) => a + (model.ils(f, d) || 0), 0))),
     })),
   };
 
-  feeRows.sort((a, b) => b.v - a.v);
+  feeRows.sort((a, b) => b.cost - a.cost);
 
   return {
     generatedAt: new Date().toISOString(),
@@ -143,10 +174,11 @@ export function computePayload(state, market, today) {
     fx: { USD: model.fx('USD', today), EUR: model.fx('EUR', today) },
     family: { total: fam.total, ytd: fam.ytd, ytdPct: pct(fam.total, fam.total - fam.ytd), m: fam.m, mPct: pct(fam.total, fam.total - fam.m) },
     people,
+    categories: CATEGORIES,
+    benchmarks: BENCHMARKS,
     growth,
-    fees: { rows: feeRows, total: feeRows.reduce((a, r) => a + r.v, 0) },
+    fees: { rows: feeRows },
     insurance: state.insurance || [],
     marketLog: market?.log || [],
-    history: (state.history || []).slice(-400),
   };
 }

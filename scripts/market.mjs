@@ -15,7 +15,7 @@ const SYMBOLS = {
 const day = (ts) => new Date(ts * 1000).toISOString().slice(0, 10);
 
 async function fetchYahoo(symbol) {
-  const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?range=2y&interval=1d`;
+  const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?range=5y&interval=1d`;
   const res = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0 (pension-dashboard)' } });
   if (!res.ok) throw new Error(`${symbol}: HTTP ${res.status}`);
   const j = await res.json();

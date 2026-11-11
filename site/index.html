@@ -36,8 +36,9 @@ h2{margin:0;font-size:22px;font-weight:800}
 .note{font-size:13px;color:var(--muted);margin:0}
 .chip{font-weight:700;font-size:14px;padding:6px 12px;border-radius:999px}
 .tablebox{overflow-x:auto;background:#fff;border-radius:20px}
-.t{min-width:1080px}
-.tr{display:grid;grid-template-columns:2.2fr 1.2fr 1.1fr 1.1fr 1.3fr 1fr 1.1fr 1.3fr;gap:12px;padding:14px 20px;border-bottom:1px solid var(--line);align-items:center;font-size:15px}
+.t{min-width:1220px}
+.tr.ft{grid-template-columns:1.8fr 0.9fr 1.6fr 1.3fr 1.3fr 1.3fr 1fr}
+.tr{display:grid;grid-template-columns:0.7fr 2fr 1.4fr 1fr 1fr 1fr 1.2fr 0.9fr 1fr 1.2fr;gap:12px;padding:14px 20px;border-bottom:1px solid var(--line);align-items:center;font-size:15px}
 .th{font-size:13px;font-weight:700}
 .cell{display:flex;flex-direction:column;gap:3px;min-width:0;align-items:flex-start}
 .small{font-size:12px;color:var(--muted)}
@@ -50,7 +51,6 @@ h2{margin:0;font-size:22px;font-weight:800}
 .sep{display:flex;align-items:center;gap:16px;margin-top:12px}
 .sep div{flex:1 1 auto;height:3px;border-radius:2px;background:var(--hero)}
 .sep span{font-size:15px;font-weight:800;color:var(--hero);letter-spacing:1px}
-.months{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));font-size:12px;color:var(--muted);text-align:center}
 #login{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
 #login form{background:#fff;border-radius:24px;padding:32px;width:min(420px,100%);display:flex;flex-direction:column;gap:14px}
 #login input[type=password]{font:inherit;font-size:17px;padding:12px 14px;border:2px solid #DDD6FE;border-radius:12px;min-height:48px}
@@ -75,6 +75,32 @@ dialog .primary{font:inherit;font-size:16px;font-weight:700;background:var(--her
 dialog .ghost{font:inherit;font-size:16px;background:#F1EEFB;color:var(--ink);border:0;border-radius:12px;min-height:46px;padding:0 20px;cursor:pointer}
 #upPrev{max-width:100%;max-height:180px;border-radius:10px;display:block}
 .drop{border:2px dashed #C4B5FD;border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:8px;background:#FAF8FF}
+h3{margin:0;font-size:19px;font-weight:800}
+.cgroup{display:flex;flex-direction:column;gap:10px}
+.owner{font-size:12px;font-weight:700;padding:3px 10px;border-radius:999px;white-space:nowrap}
+.seg{display:inline-flex;flex-wrap:wrap;background:#F1EEFB;border-radius:12px;padding:4px;gap:4px}
+.seg button{font:inherit;font-size:14px;font-weight:600;border:0;border-radius:9px;padding:0 14px;min-height:38px;background:transparent;color:var(--muted);cursor:pointer}
+.seg button[aria-pressed=true]{background:var(--hero);color:#fff}
+.custom{display:flex;flex-wrap:wrap;gap:10px;align-items:center;font-size:14px}
+.custom input{font:inherit;font-size:14px;padding:6px 8px;border:2px solid #DDD6FE;border-radius:8px;min-height:38px}
+.gstats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.gstats>div{background:#F7F5FE;border-radius:14px;padding:10px 14px;display:flex;flex-direction:column;gap:2px}
+.gstats b{font-size:18px}
+.gl{font-size:12px;color:var(--muted);font-weight:600}
+.gwrap{direction:ltr;display:grid;grid-template-columns:1fr 64px;grid-template-rows:300px 26px;column-gap:8px}
+.gplot{position:relative;grid-column:1;grid-row:1;cursor:crosshair;touch-action:pan-y}
+.yaxis{position:relative;grid-column:2;grid-row:1;font-size:12px;color:var(--muted)}
+.yaxis span{position:absolute;left:4px;transform:translateY(-50%);white-space:nowrap}
+.xaxis{position:relative;grid-column:1;grid-row:2;font-size:12px;color:var(--muted)}
+.xaxis span{position:absolute;top:6px;transform:translateX(-50%);white-space:nowrap}
+.xaxis span:first-child{transform:none}.xaxis span:last-child{transform:translateX(-100%)}
+.gcursor{position:absolute;top:0;bottom:0;width:1px;background:#1A1446;opacity:.35;pointer-events:none}
+.gdot{position:absolute;width:12px;height:12px;border-radius:50%;background:#fff;border:3px solid;transform:translate(-50%,-50%);pointer-events:none}
+.gtip{direction:rtl;position:absolute;top:6px;transform:translateX(-50%);background:#1A1446;color:#fff;border-radius:12px;padding:8px 12px;display:flex;flex-direction:column;gap:2px;font-size:13px;pointer-events:none;white-space:nowrap;box-shadow:0 6px 18px rgba(26,20,70,.25)}
+.gtip span[style*="color"]{filter:brightness(1.8)}
+.sortbtn{font:inherit;font-size:13px;font-weight:800;color:var(--ink);background:#fff;border:1px solid #DDD6FE;border-radius:8px;padding:4px 8px;cursor:pointer;justify-self:start}
+.mini{height:6px;background:#F1EEFB;border-radius:3px;overflow:hidden;width:100%}
+.mini div{height:6px;border-radius:3px}
 </style>
 </head>
 <body>
@@ -251,35 +277,37 @@ const HEAD = { s: '#E0E7FF', l: '#FCE7F3' };
 const C = 2 * Math.PI * 76;
 
 // ---------- donut ----------
+// Center shows a fixed total; hovering only highlights. Each slice ≥ 4% gets its share printed inside it.
 function donutHtml(id, aria, items, center) {
   const sum = items.reduce((a, it) => a + it.v, 0);
   let cum = 0;
-  const circles = items.map((it, i) => {
+  const circles = [], labels = [];
+  items.forEach((it, i) => {
     const len = it.v / sum * C, d = Math.max(len - 2, 0.5);
-    const c = `<circle data-i="${i}" cx="100" cy="100" r="76" fill="none" stroke="${it.color}" stroke-width="26" stroke-dasharray="${d.toFixed(2)} ${(C - d).toFixed(2)}" stroke-dashoffset="${(-cum).toFixed(2)}" style="cursor:pointer;transition:stroke-width .15s,opacity .15s"></circle>`;
-    cum += len; return c;
-  }).join('');
+    circles.push(`<circle data-i="${i}" cx="100" cy="100" r="76" fill="none" stroke="${it.color}" stroke-width="26" stroke-dasharray="${d.toFixed(2)} ${(C - d).toFixed(2)}" stroke-dashoffset="${(-cum).toFixed(2)}" style="cursor:pointer;transition:stroke-width .15s,opacity .15s"></circle>`);
+    const share = it.v / sum;
+    if (share >= 0.04) {
+      const ang = (-90 + (cum + len / 2) / C * 360) * Math.PI / 180;
+      labels.push(`<text pointer-events="none" x="${(100 + 76 * Math.cos(ang)).toFixed(1)}" y="${(100 + 76 * Math.sin(ang) + 3.5).toFixed(1)}" text-anchor="middle" font-size="10" font-weight="800" fill="#fff" style="paint-order:stroke;stroke:rgba(0,0,0,.35);stroke-width:2px">${Math.round(share * 100)}%</text>`);
+    }
+    cum += len;
+  });
   const legend = items.map((it, i) => `<button type="button" data-i="${i}"><span class="sq" style="background:${it.color}"></span><span class="lab"><span style="font-weight:600">${esc(it.label)}</span>${it.detail ? `<span class="det">${esc(it.detail)}</span>` : ''}</span><span style="font-weight:700;color:${it.sideColor || '#1A1446'}">${esc(it.side)}</span></button>`).join('');
   return `<div class="donut" id="${id}">
     <svg viewBox="0 0 200 200" role="img" aria-label="${esc(aria)}">
       <circle cx="100" cy="100" r="76" fill="none" stroke="#F1EEFB" stroke-width="26"></circle>
-      <g transform="rotate(-90 100 100)">${circles}</g>
-      <text pointer-events="none" class="c1" x="100" y="80" text-anchor="middle" font-size="11" font-weight="600" fill="#4C4677"></text>
-      <text pointer-events="none" class="c2" x="100" y="106" text-anchor="middle" font-size="21" font-weight="800" fill="#1A1446"></text>
-      <text pointer-events="none" class="c3" x="100" y="128" text-anchor="middle" font-size="12" font-weight="700"></text>
-      <text pointer-events="none" class="c4" x="100" y="144" text-anchor="middle" font-size="10" fill="#4C4677"></text>
+      <g transform="rotate(-90 100 100)">${circles.join('')}</g>
+      ${labels.join('')}
+      <text pointer-events="none" x="100" y="82" text-anchor="middle" font-size="11" font-weight="600" fill="#4C4677">${esc(center.l1 || '')}</text>
+      <text pointer-events="none" x="100" y="106" text-anchor="middle" font-size="20" font-weight="800" fill="#1A1446">${esc(center.l2 || '')}</text>
+      <text pointer-events="none" x="100" y="126" text-anchor="middle" font-size="12" font-weight="700" fill="${center.l3c || '#4C4677'}">${esc(center.l3 || '')}</text>
+      <text pointer-events="none" x="100" y="141" text-anchor="middle" font-size="10" fill="#4C4677">${esc(center.l4 || '')}</text>
     </svg>
     <div class="legend">${legend}</div></div>`;
 }
-function wireDonut(id, items, center) {
+function wireDonut(id) {
   const root = document.getElementById(id);
-  const sum = items.reduce((a, it) => a + it.v, 0);
   const set = (i) => {
-    const c = i == null ? center.all(sum) : center.hover(items[i], sum);
-    root.querySelector('.c1').textContent = c.l1 || '';
-    root.querySelector('.c2').textContent = c.l2 || '';
-    const t3 = root.querySelector('.c3'); t3.textContent = c.l3 || ''; t3.setAttribute('fill', c.l3c || '#4C4677');
-    root.querySelector('.c4').textContent = c.l4 || '';
     root.querySelectorAll('circle[data-i]').forEach((el) => {
       const on = i == null || +el.dataset.i === i;
       el.setAttribute('stroke-width', i != null && on ? 34 : 26); el.style.opacity = on ? 1 : 0.35;
@@ -290,28 +318,174 @@ function wireDonut(id, items, center) {
     const i = +el.dataset.i;
     el.addEventListener('mouseenter', () => set(i)); el.addEventListener('mouseleave', () => set(null));
     el.addEventListener('focus', () => set(i)); el.addEventListener('blur', () => set(null));
-    el.addEventListener('click', () => set(i));
   });
-  set(null);
+}
+
+// ---------- shared UI state ----------
+const UI = { sort: 'desc', feeWho: 'all', gWho: 'all', range: '1y', from: null, to: null };
+const addD = (s, n) => new Date(Date.parse(s + 'T00:00:00Z') + n * 864e5).toISOString().slice(0, 10);
+const shortMoney = (v) => v >= 1e6 ? '₪' + (v / 1e6).toFixed(2).replace(/\.?0+$/, '') + 'M' : '₪' + Math.round(v / 1e3) + 'K';
+const ownerPill = (pid, name) => `<span class="owner" style="background:${HEAD[pid]};color:${pid === 'l' ? '#831843' : '#312E81'}">${esc(name)}</span>`;
+const seg = (group, opts, cur) => `<div class="seg" role="group">${opts.map(([v, l]) => `<button type="button" data-${group}="${v}" aria-pressed="${v === cur}">${l}</button>`).join('')}</div>`;
+
+// ---------- growth chart ----------
+function niceTicks(min, max, count) {
+  const raw = (max - min) / count, mag = Math.pow(10, Math.floor(Math.log10(raw))), err = raw / mag;
+  const step = mag * (err >= 7.5 ? 10 : err >= 3.5 ? 5 : err >= 1.5 ? 2 : 1);
+  const out = []; for (let v = Math.ceil(min / step) * step; v <= max; v += step) out.push(v);
+  return out;
+}
+function renderGrowth() {
+  const g = DATA.growth, dates = g.dates, last = dates[dates.length - 1], first = dates[0];
+  const P = (id) => g.people.find((x) => x.id === id);
+  let from = UI.range === 'custom' && UI.from ? UI.from : UI.range === 'ytd' ? `${+last.slice(0, 4) - 1}-12-31` : addD(last, { '1m': -30, '1y': -365, '3y': -1095, '5y': -1826 }[UI.range] || -365);
+  const to = UI.range === 'custom' && UI.to ? UI.to : last;
+  if (from < first) from = first;
+  const idx = dates.map((d, i) => (d >= from && d <= to ? i : -1)).filter((i) => i >= 0);
+  const series = (i) => UI.gWho === 's' ? P('s').values[i] : UI.gWho === 'l' ? P('l').values[i] : P('s').values[i] + P('l').values[i];
+  const box = $('#growthBody');
+  if (idx.length < 2) { box.innerHTML = '<p class="note">אין מספיק נתונים לטווח הזה.</p>'; return; }
+  const vals = idx.map(series), ds = idx.map((i) => dates[i]);
+  let lo = Math.min(...vals), hi = Math.max(...vals);
+  const pad = (hi - lo) * 0.12 || hi * 0.02; lo -= pad; hi += pad;
+  const ticks = niceTicks(lo, hi, 4);
+  const n = vals.length - 1, W = 1000, H = 300;
+  const X = (i) => i / n * W, Y = (v) => H - (v - lo) / (hi - lo) * H;
+  const line = vals.map((v, i) => `${X(i).toFixed(1)},${Y(v).toFixed(1)}`).join(' ');
+  const area = `M${X(0)},${H} L${line.replace(/ /g, ' L')} L${X(n)},${H} Z`;
+  const color = UI.gWho === 's' ? '#6366F1' : UI.gWho === 'l' ? '#EC4899' : '#7C3AED';
+  const start = vals[0], end = vals[n], ch = end - start, chP = (end / start - 1) * 100;
+  const imax = vals.indexOf(Math.max(...vals)), imin = vals.indexOf(Math.min(...vals));
+  const long = (new Date(ds[n]) - new Date(ds[0])) / 864e5 > 120;
+  const tickIdx = [0, 0.25, 0.5, 0.75, 1].map((f) => Math.round(f * n));
+  box.innerHTML = `
+    <div class="gstats">
+      <div><span class="gl">${dt(ds[0])}</span><b>${ils(start)}</b></div>
+      <div><span class="gl">${dt(ds[n])}</span><b>${ils(end)}</b></div>
+      <div style="background:${bg(ch)};color:${col(ch)}"><span class="gl" style="color:inherit">שינוי בתקופה</span><b>${sIls(ch)}</b><span style="font-weight:700">${pct(chP)}</span></div>
+      <div><span class="gl">הכי גבוה</span><b>${ils(vals[imax])}</b><span class="gl">${dt(ds[imax])}</span></div>
+      <div><span class="gl">הכי נמוך</span><b>${ils(vals[imin])}</b><span class="gl">${dt(ds[imin])}</span></div>
+    </div>
+    <div class="gwrap">
+      <div class="yaxis">${ticks.map((t) => `<span style="top:${(Y(t) / H * 100).toFixed(2)}%">${shortMoney(t)}</span>`).join('')}</div>
+      <div class="gplot" id="gplot">
+        <svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" width="100%" height="100%" role="img" aria-label="גרף שווי ${esc(UI.gWho === 's' ? 'שחר' : UI.gWho === 'l' ? 'לוטם' : 'המשפחה')} מ־${dt(ds[0])} עד ${dt(ds[n])}: מ־${ils(start)} ל־${ils(end)}">
+          ${ticks.map((t) => `<line x1="0" x2="${W}" y1="${Y(t).toFixed(1)}" y2="${Y(t).toFixed(1)}" stroke="#ECE8FA" vector-effect="non-scaling-stroke"></line>`).join('')}
+          <path d="${area}" fill="${color}" opacity=".14"></path>
+          <polyline points="${line}" fill="none" stroke="${color}" stroke-width="2.5" vector-effect="non-scaling-stroke"></polyline>
+        </svg>
+        <div class="gcursor" id="gcursor" hidden></div>
+        <div class="gdot" id="gdot" hidden style="border-color:${color}"></div>
+        <div class="gtip" id="gtip" hidden></div>
+      </div>
+      <div class="xaxis">${tickIdx.map((i) => `<span style="left:${(X(i) / W * 100).toFixed(2)}%">${long ? monY(ds[i]) : dt(ds[i]).slice(0, 5)}</span>`).join('')}</div>
+    </div>`;
+  const plot = $('#gplot'), cur = $('#gcursor'), dot = $('#gdot'), tip = $('#gtip');
+  const move = (clientX) => {
+    const r = plot.getBoundingClientRect();
+    const fx = Math.min(1, Math.max(0, (clientX - r.left) / r.width));
+    const i = Math.round(fx * n);
+    const xPct = X(i) / W * 100, yPct = Y(vals[i]) / H * 100;
+    cur.hidden = dot.hidden = tip.hidden = false;
+    cur.style.left = xPct + '%'; dot.style.left = xPct + '%'; dot.style.top = yPct + '%';
+    const gi = idx[i];
+    const parts = UI.gWho === 'all' ? `<span>שחר ${ils(P('s').values[gi])}</span><span>לוטם ${ils(P('l').values[gi])}</span>` : '';
+    tip.innerHTML = `<b>${dt(ds[i])}</b><span style="font-size:16px;font-weight:800">${ils(vals[i])}</span><span style="color:${col(vals[i] - start)}">${sIls(vals[i] - start)} מתחילת התקופה</span>${parts}`;
+    tip.style.left = Math.min(Math.max(xPct, 14), 86) + '%';
+  };
+  plot.addEventListener('mousemove', (e) => move(e.clientX));
+  plot.addEventListener('touchmove', (e) => move(e.touches[0].clientX), { passive: true });
+  plot.addEventListener('mouseleave', () => { cur.hidden = dot.hidden = tip.hidden = true; });
+}
+
+// ---------- comparison by fund type ----------
+function renderCompare() {
+  const all = DATA.people.flatMap((p) => p.funds.map((f) => ({ ...f, pid: p.id, pname: p.name })));
+  const dir = UI.sort === 'desc' ? -1 : 1;
+  const byVal = (a, b) => (a.value == null) - (b.value == null) || dir * ((a.value || 0) - (b.value || 0));
+  const groups = DATA.categories.map(([key, name]) => {
+    const rows = all.filter((f) => f.category === key).sort(byVal);
+    const tot = (pid) => rows.filter((r) => r.pid === pid).reduce((a, r) => a + (r.value || 0), 0);
+    return { key, name, rows, total: rows.reduce((a, r) => a + (r.value || 0), 0), s: tot('s'), l: tot('l') };
+  }).filter((g) => g.rows.length).sort((a, b) => dir * (a.total - b.total));
+  const arrow = UI.sort === 'desc' ? '↓' : '↑';
+  $('#compareBody').innerHTML = groups.map((g) => `
+    <div class="cgroup">
+      <div class="row"><h3>${esc(g.name)}</h3>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">${g.s ? `${ownerPill('s', 'שחר')}<b>${ils(g.s)}</b>` : ''}${g.l ? `<span style="width:8px"></span>${ownerPill('l', 'לוטם')}<b>${ils(g.l)}</b>` : ''}<span class="small" style="margin-inline-start:8px">סה״כ ${ils(g.total)}</span></div></div>
+      <div class="tablebox"><div class="t">
+        <div class="tr th"><span>של מי</span><span>קופה</span><button type="button" class="sortbtn" data-sort aria-label="מיון לפי שווי">שווי היום ${arrow}</button><span>30 יום</span><span>מתחילת השנה</span><span>3 שנים ≈</span><span>דמי ניהול (הפקדה · צבירה)</span><span>עלות לשנה</span><span>קצבה צפויה</span><span>מתי אפשר למשוך</span></div>
+        ${g.rows.map((f) => `
+        <div class="tr">
+          <span>${ownerPill(f.pid, f.pname)}</span>
+          <div class="cell"><div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap"><span class="sq" style="background:${f.color}"></span><span style="font-weight:700">${esc(f.kind)}</span>${f.inactive ? '<span class="tag" style="background:#F1EEFB;color:#4C4677">לא פעיל</span>' : ''}</div>
+            <span class="small">${f.url ? `<a href="${esc(f.url)}" target="_blank" rel="noopener">${esc(f.provider)} ↗</a>` : esc(f.provider)}</span>${f.note ? `<span class="tag" style="background:#FFEDD5;color:#9A3412">${esc(f.note)}</span>` : ''}</div>
+          <div class="cell"><span style="font-weight:700">${f.value == null ? 'אין נתון' : ils(f.value)}</span>${f.reported ? `<span class="small">${nat(f.reported.amount, f.reported.cur)} · עודכן ${monY(f.reported.date)}</span>` : ''}${isStale(f) ? '<span class="tag" style="background:#FFEDD5;color:#9A3412">הגיע הזמן לעדכן</span>' : ''}<button type="button" class="btn-sm" data-upd="${esc(f.id)}">עדכן יתרה</button></div>
+          ${['m', 'y', 'y3'].map((k) => `<div class="cell"><span class="pill" style="color:${col(f[k + 'Pct'])};background:${bg(f[k + 'Pct'])}">${pct(f[k + 'Pct'])}</span><span class="small" style="color:${col(f[k + 'Pct'])};font-weight:600">${sIls(f[k + 'Amt'])}</span></div>`).join('')}
+          <span>${esc(f.depositFee)} · ${f.accFee == null ? '?' : (f.accFeeApprox ? '≈' : '') + f.accFee.toFixed(2) + '%'}</span>
+          <span>${ils(f.feeYear)}</span>
+          <div class="cell"><span>${ils(f.pension)}</span>${f.pensionNative ? `<span class="small">${nat(f.pensionNative.amount, f.pensionNative.cur)} לחודש</span>` : ''}</div>
+          <div class="cell"><span style="font-weight:600">${esc(f.liquidity)}</span>${f.liquidityNote ? `<span class="tag" style="background:#D1FAE5;color:#065F46">${esc(f.liquidityNote)}</span>` : ''}</div>
+        </div>`).join('')}
+      </div></div>
+    </div>`).join('');
+  $('#compareBody').querySelectorAll('[data-sort]').forEach((b) => b.addEventListener('click', () => { UI.sort = UI.sort === 'desc' ? 'asc' : 'desc'; renderCompare(); syncSortBtn(); }));
+  $('#compareBody').querySelectorAll('[data-upd]').forEach((b) => b.addEventListener('click', () => openUpdate(b.dataset.upd)));
+}
+function syncSortBtn() { const b = $('#sortTop'); if (b) b.textContent = UI.sort === 'desc' ? 'מהגדול לקטן ↓' : 'מהקטן לגדול ↑'; }
+
+// ---------- fees vs market ----------
+function renderFees() {
+  const B = DATA.benchmarks;
+  const rows = DATA.fees.rows.filter((r) => UI.feeWho === 'all' || r.person === UI.feeWho);
+  const maxCost = Math.max(1, ...rows.map((r) => r.cost));
+  const status = (r) => {
+    if (r.acc == null) return ['אין נתון', '#F1EEFB', '#4C4677'];
+    const accHigh = r.accAvg != null && r.acc > r.accAvg * 1.1 + 0.01;
+    const depHigh = r.active && r.dep != null && r.depAvg != null && r.dep > r.depAvg + 0.05;
+    return accHigh || depHigh ? ['מעל הממוצע – שווה מו״מ', '#FFEDD5', '#9A3412'] : ['בממוצע או מתחת', '#D1FAE5', '#065F46'];
+  };
+  const totCost = rows.reduce((a, r) => a + r.cost, 0), totSave = rows.reduce((a, r) => a + r.saving, 0);
+  $('#feesBody').innerHTML = `
+    <div class="gstats">
+      <div><span class="gl">סה״כ דמי ניהול לשנה</span><b>${ils(totCost)}</b></div>
+      <div style="background:${totSave > 0 ? '#FFEDD5' : '#D1FAE5'};color:${totSave > 0 ? '#9A3412' : '#065F46'}"><span class="gl" style="color:inherit">אפשר לחסוך בשנה אם יורידו לממוצע</span><b>${ils(totSave)}</b></div>
+    </div>
+    <div class="tablebox"><div class="t" style="min-width:1040px">
+      <div class="tr th ft"><span>קופה</span><span>שלכם מהצבירה</span><span>ממוצע בשוק</span><span>מההפקדה: שלכם / ממוצע</span><span>עלות לשנה</span><span>מצב</span><span>חיסכון אפשרי לשנה</span></div>
+      ${rows.map((r) => { const [st, sb, sc] = status(r); return `
+      <div class="tr ft">
+        <div class="cell"><div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">${ownerPill(r.person, r.personName)}<b>${esc(r.kind)}</b></div><span class="small">${esc(r.provider)}</span></div>
+        <span style="font-weight:700">${r.acc == null ? '?' : (r.accApprox ? '≈' : '') + r.acc.toFixed(2) + '%'}</span>
+        <div class="cell"><span>${r.accAvg == null ? '—' : r.accAvg.toFixed(2) + '%'}</span><span class="small">${esc(B[r.category] ? B[r.category].label : '')}</span></div>
+        <span>${r.active && r.dep != null ? `${r.dep.toFixed(2)}% / ${r.depAvg != null ? r.depAvg.toFixed(2) + '%' : '—'}` : '<span class="small">אין הפקדות</span>'}</span>
+        <div class="cell" style="width:100%"><b>${ils(r.cost)}</b><div class="mini"><div style="width:${(r.cost / maxCost * 100).toFixed(1)}%;background:${ACCENT[r.person]}"></div></div></div>
+        <span class="tag" style="background:${sb};color:${sc};align-self:center;justify-self:start">${st}</span>
+        <span style="font-weight:700;color:${r.saving > 0 ? '#9A3412' : '#4C4677'}">${r.saving > 0 ? ils(r.saving) : '—'}</span>
+      </div>`; }).join('')}
+    </div></div>
+    <div class="note" style="display:flex;flex-direction:column;gap:4px">
+      <span>"עלות לשנה" = דמי ניהול מהצבירה × השווי היום, ועוד דמי ניהול מההפקדה × ההפקדות בשנה (רק בקופות פעילות). "חיסכון אפשרי" = כמה הייתם חוסכים בשנה אם דמי הניהול היו יורדים לממוצע.</span>
+      <span>${esc(B.pension.tip)}</span>
+      <span>מקורות לממוצעים: ${Object.values(B).filter((b) => b.src).map((b) => b.srcUrl ? `<a href="${esc(b.srcUrl)}" target="_blank" rel="noopener">${esc(b.src)}</a>` : esc(b.src)).filter((v, i, a) => a.indexOf(v) === i).join(' · ')}</span>
+    </div>`;
 }
 
 // ---------- page ----------
 function show(D) {
   $('#login').hidden = true;
   const app = $('#app'); app.hidden = false;
+  DATA = D;
   const S = D.people.find((p) => p.id === 's') || D.people[0];
   const L = D.people.find((p) => p.id === 'l') || D.people[1];
   const updated = new Date(D.generatedAt).toLocaleString('he-IL', { timeZone: 'Asia/Jerusalem', weekday: 'short', day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
-
   D.people.forEach((p) => { const pal = PAL[p.id] || PAL.s; p.funds.forEach((f, i) => { f.color = pal[i % pal.length]; }); });
 
   let html = `
   <section class="hero">
-    <div class="row">
-      <div style="display:flex;flex-direction:column;gap:6px">
-        <h1>החיסכון הפנסיוני של שחר ולוטם</h1>
-        <span class="sub">עודכן: ${esc(updated)} · הכל בש״ח · $1 = ₪${D.fx.USD.toFixed(3)} · €1 = ₪${D.fx.EUR.toFixed(3)}</span>
-      </div>
+    <div style="display:flex;flex-direction:column;gap:6px">
+      <h1>החיסכון הפנסיוני של שחר ולוטם</h1>
+      <span class="sub">עודכן: ${esc(updated)} · הכל בש״ח · $1 = ₪${D.fx.USD.toFixed(3)} · €1 = ₪${D.fx.EUR.toFixed(3)}</span>
     </div>
     <div class="kpis">
       <div class="kpi" style="background:#fff;color:#1A1446"><span class="l" style="color:#4C4677">סה״כ צבירה משפחתית</span><span class="v">${ils(D.family.total)}</span><span class="s" style="color:${col(D.family.m)}">${pct(D.family.mPct)} ב־30 הימים האחרונים (${sIls(D.family.m)})</span></div>
@@ -322,7 +496,6 @@ function show(D) {
     <span class="sub" style="font-size:13px">קצבה צפויה = סכום הקצבאות מכל הקופות בגיל הפרישה (לפי דוחות הקופות), כולל קצבת זקנה מביטוח לאומי.</span>
   </section>`;
 
-  // reminder banner: foreign funds one by one (screenshot), Israeli funds as one line (Mislaka report)
   const stale = D.people.flatMap((p) => p.funds.filter(isStale).map((f) => ({ p, f })));
   const staleAbroad = stale.filter((x) => x.f.cur !== 'ILS'), staleIl = stale.filter((x) => x.f.cur === 'ILS');
   if (stale.length) {
@@ -330,83 +503,49 @@ function show(D) {
     html += `<section class="banner" aria-label="תזכורת לעדכון"><h2 style="font-size:19px">הגיע הזמן לעדכן</h2>
       <ul>${staleAbroad.map(({ p, f }) => `<li><b>${esc(p.name)} · ${esc(f.kind)}</b><span class="small">${f.reported ? 'עודכן ' + monY(f.reported.date) : 'אין נתון בכלל'}</span>${f.url ? `<a href="${esc(f.url)}" target="_blank" rel="noopener" style="font-size:14px">1. צלם מסך באתר ↗</a>` : ''}<button type="button" class="btn-sm" data-upd="${esc(f.id)}">2. צרף כאן</button></li>`).join('')}
       ${staleIl.length ? `<li><b>${staleIl.length} קופות בישראל</b><span class="small">${oldestIl ? 'הנתון הישן ביותר מ' + monY(oldestIl) : ''} · מתעדכנות מדוח המסלקה – העלה את הדוח לשיחה עם Claude</span></li>` : ''}</ul>
-      <p class="note">תזכורת קופצת כשנתון ישן מ־3 חודשים (חו״ל) או 4 חודשים (ישראל). ליד כל קופה בטבלה יש גם כפתור "עדכן יתרה".</p></section>`;
+      <p class="note">תזכורת קופצת כשנתון ישן מ־3 חודשים (חו״ל) או 4 חודשים (ישראל).</p></section>`;
   }
 
-  // donuts
   const personItems = (p) => p.funds.filter((f) => f.value).sort((a, b) => b.value - a.value).map((f) => ({
-    label: `${f.kind} · ${f.provider}`, v: f.value, y: f.yPct, color: f.color, side: pct(f.yPct, 1), sideColor: col(f.yPct),
+    label: `${f.kind} · ${f.provider}`, v: f.value, color: f.color, side: pct(f.yPct, 1), sideColor: col(f.yPct),
   }));
   html += `<section class="donuts">` + D.people.map((p) => `
     <div class="card">
       <div style="display:flex;align-items:center;gap:10px"><span class="dot" style="background:${ACCENT[p.id]}"></span><h2>${esc(p.name)}</h2></div>
-      ${donutHtml('d-' + p.id, 'פילוח הצבירה של ' + p.name, personItems(p))}
-      <p class="note">האחוז ליד כל קרן = תשואה מתחילת השנה (ינואר עד היום). העבר עכבר או לחץ לפרטים.</p>
+      ${donutHtml('d-' + p.id, 'פילוח הצבירה של ' + p.name, personItems(p), { l1: 'סה״כ ' + p.name, l2: ils(p.total), l3: sIls(p.ytd), l3c: col(p.ytd), l4: 'רווח מתחילת השנה' })}
+      <p class="note">האחוז בתוך העיגול = החלק של הקופה מהסך הכל. האחוז ליד כל קופה ברשימה = תשואה מתחילת השנה.</p>
     </div>`).join('') + `</section>`;
 
-  // growth
-  const g = D.growth, sP = g.people.find((x) => x.id === 's') || g.people[0], lP = g.people.find((x) => x.id === 'l') || g.people[1];
-  const tops = sP.values.map((v, i) => v + (lP ? lP.values[i] : 0));
-  const maxV = Math.max(...tops) * 1.04 || 1;
-  const n = tops.length - 1;
-  const X = (i) => (1000 - i / n * 1000).toFixed(1), Y = (v) => (260 - v / maxV * 250).toFixed(1);
-  const area = (lo, hi) => 'M' + hi.map((v, i) => `${X(i)} ${Y(v)}`).join(' L') + ' L' + lo.map((_, k) => `${X(n - k)} ${Y(lo[n - k])}`).join(' L') + ' Z';
-  const zeros = sP.values.map(() => 0);
   html += `
-  <section class="card">
-    <div class="row"><h2>איך הכסף גדל ב־12 החודשים האחרונים</h2>
-      <div style="display:flex;gap:16px;font-size:14px;font-weight:600"><span style="display:flex;align-items:center;gap:6px"><span class="sq" style="background:#6366F1"></span>${esc(S.name)}</span><span style="display:flex;align-items:center;gap:6px"><span class="sq" style="background:#EC4899"></span>${esc(L.name)}</span></div></div>
-    <div style="display:flex;flex-wrap:wrap;gap:12px">
-      <span class="chip" style="background:#EEF2FF;color:#312E81">לפני שנה: ${ils(tops[0])}</span>
-      <span class="chip" style="background:#EEF2FF;color:#312E81">היום: ${ils(tops[n])}</span>
-      <span class="chip" style="background:${bg(tops[n] - tops[0])};color:${col(tops[n] - tops[0])}">שינוי: ${sIls(tops[n] - tops[0])}</span>
+  <section class="card" aria-label="גרף צבירה">
+    <div class="row"><h2>איך הכסף השתנה לאורך זמן</h2>
+      ${seg('who', [['s', 'שחר'], ['l', 'לוטם'], ['all', 'ביחד']], UI.gWho)}</div>
+    <div class="row" style="justify-content:flex-start">
+      ${seg('range', [['1m', 'חודש'], ['ytd', 'מתחילת השנה'], ['1y', 'שנה'], ['3y', '3 שנים'], ['5y', '5 שנים'], ['custom', 'תאריכים']], UI.range)}
+      <div id="customDates" class="custom" ${UI.range === 'custom' ? '' : 'hidden'}>
+        <label>מ־<input type="date" id="gFrom" min="${D.growth.dates[0]}" max="${D.today}" value="${UI.from || addD(D.today, -180)}"></label>
+        <label>עד <input type="date" id="gTo" min="${D.growth.dates[0]}" max="${D.today}" value="${UI.to || D.today}"></label>
+        <button type="button" class="btn-sm" id="gApply">הצג</button>
+      </div>
     </div>
-    <svg viewBox="0 0 1000 260" preserveAspectRatio="none" width="100%" height="260" role="img" aria-label="גרף צבירה ל־12 חודשים">
-      ${[65, 130, 195].map((y) => `<line x1="0" y1="${y}" x2="1000" y2="${y}" stroke="#ECE8FA" vector-effect="non-scaling-stroke"></line>`).join('')}
-      <path d="${area(zeros, sP.values)}" fill="#6366F1" opacity=".9"></path>
-      ${lP ? `<path d="${area(sP.values, tops)}" fill="#EC4899" opacity=".85"></path>` : ''}
-      <path d="M${tops.map((v, i) => `${X(i)} ${Y(v)}`).join(' L')}" fill="none" stroke="#1A1446" stroke-width="2" vector-effect="non-scaling-stroke"></path>
-    </svg>
-    <div class="months">${g.labels.map((l) => `<span>${esc(l)}</span>`).join('')}</div>
-    <p class="note">הערכה: כל קופה צומחת לפי המדד של המסלול שלה מאז היתרה המדווחת האחרונה (לא כולל הפקדות חדשות). כל דוח חדש מהקופות מאפס את הנקודה לאמת.</p>
+    <div id="growthBody"></div>
+    <p class="note">הגרף הוא הערכה: השווי של הקופות שיש לכם היום, לפי תנועות השוק במסלול של כל קופה ביחס ליתרה האחרונה שדווחה. הוא לא כולל הפקדות ומשיכות שהיו בדרך, ולכן מראה כמה התשואה הוסיפה או הורידה – לא כמה כסף היה בפועל בחשבון בכל תאריך.</p>
+  </section>
+
+  <section style="display:flex;flex-direction:column;gap:14px" aria-label="השוואה לפי סוג קופה">
+    <div class="row"><h2 style="font-size:24px">השוואה לפי סוג קופה</h2>
+      <button type="button" class="btn-sm" id="sortTop" aria-label="שנה סדר מיון"></button></div>
+    <div id="compareBody" style="display:flex;flex-direction:column;gap:22px"></div>
+    <p class="note">${esc(S.footnote)}</p><p class="note">${esc(L.footnote)}</p>
+    <p class="note">"3 שנים ≈" = הערכה לפי מדד המסלול של כל קופה (בלי הפקדות). 30 יום ומתחילת השנה מבוססים על הדוח האחרון של הקופה ועל תנועות השוק מאז.</p>
+  </section>
+
+  <section class="card" aria-label="דמי ניהול">
+    <div class="row"><h2>כמה דמי ניהול משלמים – ואיך זה ביחס לשוק</h2>
+      ${seg('fee', [['s', 'שחר'], ['l', 'לוטם'], ['all', 'ביחד']], UI.feeWho)}</div>
+    <div id="feesBody" style="display:flex;flex-direction:column;gap:14px"></div>
   </section>`;
 
-  // tables
-  for (const p of D.people) {
-    html += `
-    <section style="display:flex;flex-direction:column;gap:12px">
-      <div class="row"><div style="display:flex;align-items:center;gap:10px"><span class="dot" style="background:${ACCENT[p.id]}"></span><h2 style="font-size:24px">הקופות של ${esc(p.name)}</h2></div>
-        <span style="font-size:14px;font-weight:600;color:#4C4677">${p.funds.length} קופות · ${ils(p.total)}</span></div>
-      <div class="tablebox"><div class="t">
-        <div class="tr th" style="background:${HEAD[p.id]}"><span>קרן / קופה</span><span>שווי היום (הערכה)</span><span>שינוי ב־30 יום</span><span>מתחילת השנה</span><span>דמי ניהול (הפקדה · צבירה)</span><span>עלות לשנה</span><span>קצבה צפויה</span><span>מתי אפשר למשוך</span></div>
-        ${p.funds.map((f) => `
-        <div class="tr">
-          <div class="cell"><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><span class="sq" style="background:${f.color}"></span><span style="font-weight:700">${esc(f.kind)}</span>${f.inactive ? '<span class="tag" style="background:#F1EEFB;color:#4C4677">לא פעיל</span>' : ''}</div>
-            <span class="small">${f.url ? `<a href="${esc(f.url)}" target="_blank" rel="noopener">${esc(f.provider)} ↗</a>` : esc(f.provider)} · ${esc(f.track)}</span></div>
-          <div class="cell"><span style="font-weight:700">${f.value == null ? 'אין נתון' : ils(f.value)}</span>${f.reported ? `<span class="small">${nat(f.reported.amount, f.reported.cur)} · עודכן ${monY(f.reported.date)}</span>` : ''}${isStale(f) ? '<span class="tag" style="background:#FFEDD5;color:#9A3412">הגיע הזמן לעדכן</span>' : ''}<button type="button" class="btn-sm" data-upd="${esc(f.id)}">עדכן יתרה</button></div>
-          <div class="cell"><span class="pill" style="color:${col(f.mPct)};background:${bg(f.mPct)}">${pct(f.mPct)}</span><span class="small" style="color:${col(f.mPct)};font-weight:600">${sIls(f.mAmt)}</span></div>
-          <div class="cell"><span class="pill" style="color:${col(f.yPct)};background:${bg(f.yPct)}">${pct(f.yPct)}</span><span class="small" style="color:${col(f.yPct)};font-weight:600">${sIls(f.yAmt)}</span></div>
-          <div class="cell"><span>${esc(f.depositFee)} · ${f.accFee == null ? '?' : f.accFee.toFixed(2) + '%'}</span>${f.note ? `<span class="tag" style="background:#FFEDD5;color:#9A3412">${esc(f.note)}</span>` : ''}</div>
-          <span>${ils(f.feeYear)}</span>
-          <div class="cell"><span>${ils(f.pension)}</span>${f.pensionNative ? `<span class="small">${nat(f.pensionNative.amount, f.pensionNative.cur)} לחודש</span>` : ''}</div>
-          <div class="cell"><span style="font-weight:600">${esc(f.liquidity)}</span>${f.liquidityNote ? `<span class="tag" style="background:#D1FAE5;color:#065F46">${esc(f.liquidityNote)}</span>` : ''}</div>
-        </div>`).join('')}
-      </div></div>
-      ${p.footnote ? `<p class="note">${esc(p.footnote)}</p>` : ''}
-    </section>`;
-  }
-
-  // fees
-  const fmax = D.fees.rows.length ? D.fees.rows[0].v : 1;
-  const feeColor = (r) => { const p = D.people.find((x) => x.id === r.person); return p ? ACCENT[p.id] : '#6366F1'; };
-  html += `
-  <section class="card">
-    <div class="row"><h2>כמה דמי ניהול משלמים בשנה</h2><span class="chip" style="background:#FFEDD5;color:#9A3412">סה״כ ${ils(D.fees.total)} לשנה</span></div>
-    <div class="bars">${D.fees.rows.map((r) => `<div class="bar"><span style="font-weight:600">${esc(r.label)}</span><div class="track"><div class="fill" style="width:${(r.v / fmax * 100).toFixed(1)}%;background:${feeColor(r)}"></div></div><span style="font-weight:700;text-align:left">${ils(r.v)}</span></div>`).join('')}</div>
-    <p class="note">דמי ניהול מהצבירה × השווי היום. לא כולל דמי ניהול מהפקדה וקופות שאחוז הדמים שלהן לא ידוע.</p>
-  </section>`;
-
-  // insurance
   const ins = D.insurance;
   const insTotal = ins.reduce((a, r) => a + r.monthly, 0);
   const insItems = ins.map((r) => ({ label: r.label, detail: r.detail, v: r.monthly, color: r.color, side: m2(r.monthly) }));
@@ -416,28 +555,29 @@ function show(D) {
   <section class="card" style="gap:18px">
     <div class="row"><h2>כמה משלמים על ביטוחים</h2>
       <div style="display:flex;gap:10px;flex-wrap:wrap"><span class="chip" style="background:#241A5C;color:#fff;font-size:18px;border-radius:12px">${m2(insTotal)} לחודש</span><span class="chip" style="background:#FDE68A;color:#5B3B00;font-size:18px;border-radius:12px">${m2(Math.round(insTotal * 12))} לשנה</span></div></div>
-    ${donutHtml('d-ins', 'פילוח תשלומי הביטוח לפי סוג', insItems)}
+    ${donutHtml('d-ins', 'פילוח תשלומי הביטוח לפי סוג', insItems, { l1: 'סה״כ לחודש', l2: m2(insTotal), l3: m2(Math.round(insTotal * 12)) + ' לשנה' })}
     <div style="display:flex;flex-wrap:wrap;gap:10px;font-size:14px"><span style="font-weight:600;color:#4C4677">אתרי החברות:</span>${companies.map(([c, u]) => `<a href="${esc(u)}" target="_blank" rel="noopener">${esc(c)} ↗</a>`).join('')}</div>
   </section>
   <footer>
-    <span>יתרות: הדוח האחרון מכל קופה (מסלקה פנסיונית / דוחות הקופות). שווי יומי: הערכה לפי מדדי השוק (S&P 500, ת״א 125, MSCI World, Vanguard 2045) ושערי בנק ישראל.</span>
+    <span>יתרות: הדוח האחרון מכל קופה (מסלקה פנסיונית / דוחות הקופות). שווי יומי: הערכה לפי מדדי השוק (S&P 500, ת״א 125, MSCI World, קרנות Vanguard, אג״ח אירו) ושערי בנק ישראל.</span>
     <span>מתעדכן אוטומטית כל בוקר. <button class="linkbtn" id="logout" type="button">יציאה ושכחת הסיסמה במכשיר</button></span>
   </footer>`;
 
   app.innerHTML = html;
-  DATA = D;
-  app.querySelectorAll('[data-upd]').forEach((b) => b.addEventListener('click', () => openUpdate(b.dataset.upd)));
-
-  for (const p of D.people) {
-    wireDonut('d-' + p.id, personItems(p), {
-      all: (sum) => ({ l1: 'סה״כ ' + p.name, l2: ils(sum), l3: sIls(p.ytd), l3c: col(p.ytd), l4: 'מתחילת השנה' }),
-      hover: (it, sum) => ({ l1: it.label, l2: ils(it.v), l3: pct(it.y, 1) + ' השנה', l3c: col(it.y), l4: Math.round(it.v / sum * 100) + '% מהצבירה' }),
-    });
-  }
-  wireDonut('d-ins', insItems, {
-    all: (sum) => ({ l1: 'סה״כ לחודש', l2: m2(sum), l3: m2(Math.round(sum * 12)) + ' לשנה' }),
-    hover: (it, sum) => ({ l1: it.label, l2: m2(it.v), l3: Math.round(it.v / sum * 100) + '% · ' + m2(Math.round(it.v * 12)) + ' לשנה' }),
-  });
+  for (const p of D.people) wireDonut('d-' + p.id);
+  wireDonut('d-ins');
+  app.querySelectorAll('.banner [data-upd]').forEach((b) => b.addEventListener('click', () => openUpdate(b.dataset.upd)));
+  const segWire = (attr, fn) => app.querySelectorAll(`[data-${attr}]`).forEach((b) => b.addEventListener('click', () => {
+    app.querySelectorAll(`[data-${attr}]`).forEach((x) => x.setAttribute('aria-pressed', x === b));
+    fn(b.dataset[attr]);
+  }));
+  segWire('who', (v) => { UI.gWho = v; renderGrowth(); });
+  segWire('range', (v) => { UI.range = v; $('#customDates').hidden = v !== 'custom'; if (v === 'custom') { UI.from = $('#gFrom').value; UI.to = $('#gTo').value; } renderGrowth(); });
+  segWire('fee', (v) => { UI.feeWho = v; renderFees(); });
+  $('#gApply').addEventListener('click', () => { UI.from = $('#gFrom').value; UI.to = $('#gTo').value; if (UI.from > UI.to) [UI.from, UI.to] = [UI.to, UI.from]; renderGrowth(); });
+  $('#sortTop').addEventListener('click', () => { UI.sort = UI.sort === 'desc' ? 'asc' : 'desc'; renderCompare(); syncSortBtn(); });
+  syncSortBtn();
+  renderGrowth(); renderCompare(); renderFees();
   $('#logout').addEventListener('click', () => { try { localStorage.removeItem(STORE); } catch {} location.reload(); });
 }
 </script>
