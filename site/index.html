@@ -576,6 +576,7 @@ function show(D) {
   let html = `
   <section class="hero">
     <div style="display:flex;flex-direction:column;gap:6px">
+      <a href="../stocks-dashboard/hon/" style="color:inherit;font-weight:600;font-size:14px;text-decoration:none;align-self:flex-start">→ חזרה להון עצמי</a>
       <h1>החיסכון הפנסיוני של שחר ולוטם</h1>
       <span class="sub">עודכן: ${esc(updated)} · הכל בש״ח · $1 = ₪${D.fx.USD.toFixed(3)} · €1 = ₪${D.fx.EUR.toFixed(3)}</span>
       <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:4px">${fxSeg()}<span class="sub" style="font-size:13px">${UI.fx ? 'התשואות כוללות את השינוי בשער הדולר והאירו – כלומר כמה ₪ יש לכם כרגע במציאות' : 'כמה ₪ היו לכם אילו שער הדולר והאירו לא היה זז מתחילת התקופה – למשל מ־1 בינואר ברווח מתחילת השנה, ומלפני שנה בגרף של שנה'}</span></div>

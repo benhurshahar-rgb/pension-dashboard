@@ -244,6 +244,41 @@ export function computePayload(state, market, today) {
     fx: { USD: days.map((d) => +model.fx('USD', d).toFixed(4)), EUR: days.map((d) => +model.fx('EUR', d).toFixed(4)) },
   };
 
+  // Per-fund weekly series (indices into growth.dates), so a change over any period can be split into
+  // deposits / exchange rate / investment return for each fund.
+  const fundIdx = [];
+  for (let i = days.length - 1; i >= 0; i -= 5) fundIdx.unshift(i);
+  growth.fundIdx = fundIdx;
+  growth.funds = state.people.flatMap((p) => p.funds.map((f) => {
+    const ex = model.exposure(f);
+    return {
+      id: f.id, person: p.name, category: f.category, kind: f.kind, provider: f.provider,
+      usd: +ex.USD.toFixed(3), eur: +ex.EUR.toFixed(3),
+      values: fundIdx.map((i) => Math.round(model.ils(f, days[i]) || 0)),
+      dep: fundIdx.map((i) => Math.round(cumDeposits(f, days[i]) * model.fx(f.cur, days[i]))),
+    };
+  }));
+
+  // Current monthly deposits per fund, in ILS: the fund's monthlyDeposit when set, otherwise the last
+  // full year of deposits in the annual reports / 12. Inactive funds and people with paused deposits: none.
+  const thisYear = today.slice(0, 4);
+  const depositItems = state.people.flatMap((p) => p.funds.map((f) => {
+    let monthly = 0, source = null;
+    if (!f.inactive && !p.depositsPaused) {
+      if (f.monthlyDeposit) { monthly = f.monthlyDeposit; source = 'monthly'; }
+      else if (f.yearlyDeposits) {
+        const ys = Object.keys(f.yearlyDeposits).filter((y) => f.yearlyDeposits[y] > 0).sort();
+        const y = ys.filter((x) => x < thisYear).pop() || ys.pop();
+        if (y) {
+          const months = y === thisYear && f.balanceDate && f.balanceDate.slice(0, 4) === y ? Math.max(1, +f.balanceDate.slice(5, 7)) : 12;
+          monthly = f.yearlyDeposits[y] / months; source = 'report:' + y;
+        }
+      }
+    }
+    return { id: f.id, person: p.name, category: f.category, kind: f.kind, provider: f.provider, inactive: !!f.inactive, paused: !!p.depositsPaused, monthly: Math.round(monthly * model.fx(f.cur, today)), source };
+  }));
+  const deposits = { monthly: depositItems.reduce((a, x) => a + x.monthly, 0), items: depositItems };
+
   // Currency box: S&P 500 in dollars vs in shekels, per period.
   const chg = (k, a, b) => { const x = model.comp(k, a), y = model.comp(k, b); return x && y ? (y / x - 1) * 100 : null; };
   const fxPct = (c, a, b) => (model.fx(c, b) / model.fx(c, a) - 1) * 100;
@@ -262,6 +297,7 @@ export function computePayload(state, market, today) {
     categories: CATEGORIES,
     benchmarks: BENCHMARKS,
     growth,
+    deposits,
     fees: { rows: feeRows },
     insurance: state.insurance || [],
     coverage: state.coverage || [],
