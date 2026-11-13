@@ -78,5 +78,12 @@ const market = OFFLINE ? JSON.parse(fs.readFileSync(OFFLINE, 'utf8')) : await up
 console.log((market.log || []).join('\n'));
 const today = process.env.TODAY || new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Jerusalem' });
 const payload = computePayload(state, market, today);
+
+// Extra private numbers for the equity portal (data/portal.sealed.json, sealed to the same key): passed through as-is.
+const portalFile = P('data', 'portal.sealed.json');
+if (fs.existsSync(portalFile)) {
+  try { payload.portal = open(JSON.parse(fs.readFileSync(portalFile, 'utf8')), keys.privateKey); }
+  catch { console.log('::warning::Cannot open data/portal.sealed.json'); }
+}
 fs.writeFileSync(P('_site', 'data.enc.json'), JSON.stringify(encryptForPage(payload, password, pageSalt)));
 console.log(`Built page: total ₪${Math.round(payload.family.total).toLocaleString('en-US')} (${today})`);
